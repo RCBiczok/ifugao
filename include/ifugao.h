@@ -1,17 +1,12 @@
 #pragma once
 
-#include "tree.h"
-#include <boost/dynamic_bitset.hpp>
-
 #include <memory>
 #include <vector>
 #include <set>
 #include <assert.h>
 #include <iostream>
 
-//TODO bad performance when doing string comparison all the time I guess...
-typedef size_t leaf;
-typedef boost::dynamic_bitset<> leaf_set;
+#include "types.h"
 
 //lca(smaller_left, smaller_right) < lca(bigger_left, bigger_right)
 struct constraint {

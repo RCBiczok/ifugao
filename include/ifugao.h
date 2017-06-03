@@ -1,6 +1,7 @@
 #pragma once
 
 #include "tree.h"
+#include <boost/dynamic_bitset.hpp>
 
 #include <memory>
 #include <vector>
@@ -9,22 +10,22 @@
 #include <iostream>
 
 //TODO bad performance when doing string comparison all the time I guess...
-typedef std::string leaf_number;
-typedef std::set<leaf_number> leaf_set;
+typedef size_t leaf;
+typedef boost::dynamic_bitset<> leaf_set;
 
 //lca(smaller_left, smaller_right) < lca(bigger_left, bigger_right)
 struct constraint {
-    leaf_number smaller_left;
-    leaf_number bigger_left;
-    leaf_number smaller_right;
-    leaf_number bigger_right;
+    leaf smaller_left;
+    leaf bigger_left;
+    leaf smaller_right;
+    leaf bigger_right;
 };
 
 /**
  * Method calling overview:
  * 
  *  list_trees
- *    combine_sets
+ *    find_all_rooted_trees
  *      [recursion stop]
  *        get_all_binary_trees
  *      apply_constraints
@@ -42,9 +43,10 @@ struct constraint {
  * @param file File to write all trees in newick format into, iff file != nullptr.
  * @return Number of all trees on the terrace.
  */
-size_t list_trees(const std::vector<constraint> &constraints,
-                  const leaf_number &root_species_name,
-                  const leaf_set &leaves, FILE *file);
+size_t list_trees(const std::vector<constraint> &constraints, const leaf &root,
+                  const leaf_set &leaves,
+                  const std::vector<std::string> &leaf_number_to_label,
+                  FILE *file);
 
 /**
  * Applies the given constraints on a set of given leaves, by merging them if
@@ -64,7 +66,7 @@ std::vector<std::shared_ptr<Tree> > find_all_rooted_trees(const leaf_set &leaves
 /** Combines all sets (constraints need to be applied already) */
 std::vector<std::shared_ptr<UnrootedTree> > find_all_unrooted_trees(const leaf_set &leaves,
                                                                     const std::vector<constraint> &constraints,
-                                                                    const leaf_number &root_species_name);
+                                                                    const leaf &root_species_name);
 
 /**
  * Returns a vector containing all constraints infered from the given supertree.
@@ -75,7 +77,7 @@ std::vector<std::shared_ptr<UnrootedTree> > find_all_unrooted_trees(const leaf_s
 std::vector<constraint> extract_constraints_from_tree(
         const std::shared_ptr<Tree> supertree);
 
-std::vector<std::shared_ptr<Tree> > get_all_binary_trees(const leaf_set &leafs);
+std::vector<std::shared_ptr<Tree> > get_all_binary_trees(const leaf_set &leaves);
 
 /**
  * Returns a vector containing all constraints that still are valid for the given set of leaves.

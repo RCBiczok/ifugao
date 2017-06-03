@@ -1,5 +1,4 @@
-#ifndef TREE_H
-#define TREE_H
+#pragma once
 
 #include <memory>
 
@@ -98,4 +97,3 @@ public:
 
 std::shared_ptr<Tree> deep_copy(std::shared_ptr<Tree> tree);
 
-#endif /* TREE_H */

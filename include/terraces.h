@@ -1,5 +1,4 @@
-#ifndef TERRACES_H
-#define TERRACES_H
+#pragma once
 
 #include "tree.h"
 #include "ifugao.h"
@@ -193,4 +192,3 @@ void d_print_tree_impl(const char* file, const int line, const std::shared_ptr<T
 #define d_print_tree(tree) do {} while(false)
 #endif
 
-#endif /* TERRACES_H */

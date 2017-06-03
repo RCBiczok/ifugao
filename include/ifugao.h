@@ -1,5 +1,4 @@
-#ifndef IFUGAO_H
-#define IFUGAO_H
+#pragma once
 
 #include "tree.h"
 
@@ -38,14 +37,14 @@ struct constraint {
  * Calculates the number of trees on the terrace.
  *
  * @param constraints All constraints to fulfill.
- * @param leafs All leaves of the tree.
+ * @param leaves All leaves of the tree.
  * @param root_species_name the root species
  * @param file File to write all trees in newick format into, iff file != nullptr.
  * @return Number of all trees on the terrace.
  */
 size_t list_trees(const std::vector<constraint> &constraints,
                   const leaf_number &root_species_name,
-                  const leaf_set &leafs, FILE *file);
+                  const leaf_set &leaves, FILE *file);
 
 /**
  * Applies the given constraints on a set of given leaves, by merging them if
@@ -121,7 +120,7 @@ inline size_t number_partition_tuples(
 }
 
 //TODO Doc
-std::set<leaf_number> extract_leaf_labels_from_supertree(
+leaf_set extract_leaf_labels_from_supertree(
         std::shared_ptr<Tree> tree);
 
 /**
@@ -133,4 +132,3 @@ std::set<leaf_number> extract_leaf_labels_from_supertree(
 std::tuple<std::shared_ptr<leaf_set>, std::shared_ptr<leaf_set> > get_nth_partition_tuple(
         std::vector<std::shared_ptr<leaf_set> > &partitions, size_t n);
 
-#endif /* IFUGAO_H */

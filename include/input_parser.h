@@ -1,5 +1,4 @@
-#ifndef INPUT_PARSER_H
-#define INPUT_PARSER_H
+#pragma once
 
 #include <stdlib.h>
 #include "newick-tools/newick-tools.h"
@@ -64,4 +63,3 @@ ntree_t *get_newk_tree_from_string(const char *nwk_string);
 }
 #endif
 
-#endif /* INPUT_PARSER_H */

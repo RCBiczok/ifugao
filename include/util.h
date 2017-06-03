@@ -1,5 +1,4 @@
-#ifndef UTIL_H
-#define UTIL_H
+#pragma once
 
 //this file contains useful function that don't belong anywhere else
 
@@ -98,4 +97,3 @@ bool node_compare(std::shared_ptr<Tree> node_1, std::shared_ptr<Tree> node_2);
  */
 void get_leafs (std::vector<std::shared_ptr<Tree>> &leaf_list, std::shared_ptr<Tree> current_node, std::shared_ptr<Tree> parent);
 
-#endif //include guard

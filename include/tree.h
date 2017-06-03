@@ -35,6 +35,13 @@ public:
         return (left == nullptr && right == nullptr);
     }
 
+    /**
+     * @brief get_neighbours returns the neighbours of this node.
+     * This can be used for easier usage of rooted trees as unrooted trees
+     * @return a vector containing the adjacent nodes.
+     */
+    std::vector<std::shared_ptr<Tree>> get_neighbors();
+
     std::string to_newick_string();
   
 };

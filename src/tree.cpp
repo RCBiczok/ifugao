@@ -25,6 +25,20 @@ std::string Tree::to_newick_string() {
     return ss.str();
 }
 
+std::vector<std::shared_ptr<Tree>> Tree::get_neighbors() {
+    std::vector<std::shared_ptr<Tree>> neighbours();
+    if (left != nullptr) {
+        neighbours.push_back(left);
+    }
+    if (right != nullptr) {
+        neighbours.push_back(right);
+    }
+    if (parent != nullptr) {
+        neighbours.push_back(parent);
+    }
+    return neighbours;
+}
+
 std::string UnrootedTree::to_newick_string() {
     std::stringstream ss;
     ss << "(";

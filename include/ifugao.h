@@ -55,13 +55,14 @@ std::vector<std::shared_ptr<leaf_set> > apply_constraints(
         const leaf_set &leaves, const std::vector<constraint> &constraints);
 
 /** Combines all sets (constraints need to be applied already) */
-std::vector<std::shared_ptr<Tree> > find_all_rooted_trees(const leaf_set &leaves,
-                                                          const std::vector<constraint> &constraints);
+std::vector<std::shared_ptr<Tree> > find_all_rooted_trees(
+        const leaf_set &leaves,
+        const std::vector<constraint> &constraints);
 
 /** Combines all sets (constraints need to be applied already) */
-std::vector<std::shared_ptr<UnrootedTree> > find_all_unrooted_trees(const leaf_set &leaves,
-                                                                    const std::vector<constraint> &constraints,
-                                                                    const leaf &root_species_name);
+std::vector<std::shared_ptr<Tree> > find_all_unrooted_trees(
+        const leaf_set &leaves, const std::vector<constraint> &constraints,
+        const leaf &root_id);
 
 /**
  * Returns a vector containing all constraints infered from the given supertree.
@@ -117,8 +118,7 @@ inline size_t number_partition_tuples(
 }
 
 //TODO Doc
-leaf_set extract_leaf_labels_from_supertree(
-        std::shared_ptr<Tree> tree);
+leaf_set extract_leaf_labels_from_supertree(std::shared_ptr<Tree> tree);
 
 /**
  * Returns the n-th partition tuple of the given partition list

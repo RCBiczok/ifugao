@@ -5,63 +5,34 @@
 #include <memory>
 #include <map>
 
-static void to_newick_string_rec(std::stringstream &ss, Tree &node,
-        std::vector<std::string> leaf_number_to_label) {
-    if(node.is_leaf()) {
-        ss << leaf_number_to_label[node.label];
-    } else {
-        ss << "(";
-        to_newick_string_rec(ss, *node.left);
-        ss << ",";
-        to_newick_string_rec(ss, *node.right);
-        ss << ")";
-    }
+std::string Leaf::to_newick_string(std::vector<std::string> &leaf_to_label) {
+    return leaf_to_label[this.leaf_id];
 }
 
-std::string Tree::to_newick_string() {
-    std::stringstream ss;
-    to_newick_string_rec(ss, *this);
-    ss << ";";
-    return ss.str();
-}
-
-std::vector<std::shared_ptr<Tree>> Tree::get_neighbors() {
-    std::vector<std::shared_ptr<Tree>> neighbours();
-    if (left != nullptr) {
-        neighbours.push_back(left);
-    }
-    if (right != nullptr) {
-        neighbours.push_back(right);
-    }
-    if (parent != nullptr) {
-        neighbours.push_back(parent);
-    }
-    return neighbours;
-}
-
-std::string UnrootedTree::to_newick_string() {
+std::string Node::to_newick_string(std::vector<std::string> &leaf_to_label) {
     std::stringstream ss;
     ss << "(";
-    if(this->elem1 != nullptr) {
-        to_newick_string_rec(ss, *this->elem1);
-    }
-    if(this->elem2 != nullptr) {
-        if(this->elem1 != nullptr) {
-            ss << ",";
-        }
-        to_newick_string_rec(ss, *this->elem2);
-    }
-    if(this->elem3 != nullptr) {
-        if(this->elem1 != nullptr || this->elem2 != nullptr) {
-            ss << ",";
-        }
-        to_newick_string_rec(ss, *this->elem3);
-    }
-    ss << ");";
+    ss << this.left.to_newick_string(leaf_to_label);
+    ss << ",";
+    ss << this.right.to_newick_string(leaf_to_label);
+    ss << ")";
     return ss.str();
 }
 
-static std::shared_ptr<Tree> deep_copy(std::shared_ptr<Tree> tree,
+std::string UnrootedNode::to_newick_string(std::vector<std::string> &leaf_to_label) {
+    std::stringstream ss;
+    ss << "(";
+    ss << this.elem1.to_newick_string(leaf_to_label);
+    ss << ",";
+    ss << this.elem2.to_newick_string(leaf_to_label);
+    ss << ",";
+    ss << this.elem3.to_newick_string(leaf_to_label);
+    ss << ")";
+    return ss.str();
+}
+
+//TODO maybe still needed
+/*static std::shared_ptr<Tree> deep_copy(std::shared_ptr<Tree> tree,
         std::map<std::shared_ptr<Tree>, std::shared_ptr<Tree>> &cover_map) {
     if (tree == nullptr) {
         return nullptr;
@@ -85,4 +56,4 @@ static std::shared_ptr<Tree> deep_copy(std::shared_ptr<Tree> tree,
 std::shared_ptr<Tree> deep_copy(std::shared_ptr<Tree> tree) {
     std::map<std::shared_ptr<Tree>, std::shared_ptr<Tree>> cover_map;
     return deep_copy(tree, cover_map);
-}
+}*/

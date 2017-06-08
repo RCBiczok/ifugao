@@ -1,5 +1,5 @@
 #pragma once
-#include "types.h"
+#include "leaf_set.h"
 
 //lca(smaller_left, smaller_right) < lca(bigger_left, bigger_right)
 struct constraint {
@@ -16,7 +16,7 @@ struct constraint {
  * @param constraints All constraints that could still be valid.
  * @return All constraints that are still valid.
  */
-std::vector<constraint> find_constraints(const leaf_set &leaves,
+std::vector<constraint> find_constraints(const LeafSet &leaves,
                                          const std::vector<constraint> &constraints);
 
 /**

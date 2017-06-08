@@ -1,3 +1,4 @@
+#include "constraints.h"
 
 std::vector<constraint> extract_constraints_from_tree(
         const std::shared_ptr<Tree> supertree) {
@@ -8,23 +9,23 @@ std::vector<constraint> extract_constraints_from_tree(
     return constraints;
 }
 
-std::vector<constraint> find_constraints(const leaf_set &leaves,
+std::vector<constraint> find_constraints(const LeafSet &leaves,
                                          const std::vector<constraint> &constraints) {
     std::vector<constraint> valid_constraints;
 
     for (constraint cons : constraints) {
         if (cons.smaller_left == cons.bigger_left) {
-            if (leaves.find(cons.smaller_left) != leaves.end()
-                && leaves.find(cons.smaller_right) != leaves.end()
-                && leaves.find(cons.bigger_right) != leaves.end()) {
+            if (leaves.contains(cons.smaller_left) != leaves.end()
+                && leaves.contains(cons.smaller_right) != leaves.end()
+                && leaves.contains(cons.bigger_right) != leaves.end()) {
                 // constraint is valid on leaf set
                 valid_constraints.push_back(cons);
             }
         } else {
             // smaller_right == bigger_right
-            if (leaves.find(cons.smaller_left) != leaves.end()
-                && leaves.find(cons.smaller_right) != leaves.end()
-                && leaves.find(cons.bigger_left) != leaves.end()) {
+            if (leaves.contains(cons.smaller_left) != leaves.end()
+                && leaves.contains(cons.smaller_right) != leaves.end()
+                && leaves.contains(cons.bigger_left) != leaves.end()) {
                 // constraint is valid on leaf set
                 valid_constraints.push_back(cons);
             }
@@ -34,10 +35,10 @@ std::vector<constraint> find_constraints(const leaf_set &leaves,
 }
 
 
-static std::tuple<leaf, leaf> extract_constraints_from_tree_rec(
+static std::tuple<size_t, size_t> extract_constraints_from_tree_rec(
         const std::shared_ptr<Tree> node,
         std::vector<constraint> &constraints) {
-
+    //TODO adopt to new tree structure
     assert(node != nullptr);
 
     if (node->is_leaf()) {
@@ -46,14 +47,14 @@ static std::tuple<leaf, leaf> extract_constraints_from_tree_rec(
     }
 
     // (l,r) of the left child node
-    leaf l_left_most;
-    leaf l_right_most;
+    size_t l_left_most;
+    size_t l_right_most;
     std::tie(l_left_most, l_right_most) = extract_constraints_from_tree_rec(
             node->left, constraints);
 
     // (l,r) of the right child node
-    leaf r_left_most;
-    leaf r_right_most;
+    size_t r_left_most;
+    size_t r_right_most;
     std::tie(r_left_most, r_right_most) = extract_constraints_from_tree_rec(
             node->right, constraints);
 

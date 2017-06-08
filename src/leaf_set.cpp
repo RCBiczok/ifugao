@@ -53,6 +53,20 @@ bool BitLeafSet::contains(size_t leaf) {
 
 std::tuple<BitLeafSet, BitLeafSet> BitLeafSet::get_nth_partition_tuple(
             std::vector<BitLeafSet> &partitions, size_t n) {
+    LeafSet part_one;
+    LeafSet part_two;
     
+    assert(n > 0 && n <= number_partition_tuples(partitions));
+//TODO think of sth smart
+/*    for (size_t i = 0; i < partitions.size(); i++) {
+        if (is_bit_set(n, i)) {
+            part_one->insert(partitions[i]->begin(), partitions[i]->end());
+        } else {
+            part_two->insert(partitions[i]->begin(), partitions[i]->end());
+        }
+    }
+*/
+    return std::make_tuple(part_one, part_two);
+
 }
 

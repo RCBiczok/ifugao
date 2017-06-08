@@ -1,58 +1,53 @@
 #include "ifugao.h"
 
-#include <assert.h>
-#include <terraces.h>
+//#include <terraces.h>
 #include <map>
 
-std::tuple<std::shared_ptr<leaf_set>,
-        std::shared_ptr<leaf_set> > get_nth_partition_tuple(
-        std::vector<std::shared_ptr<leaf_set> > &partitions,
-        size_t n) {
-
-    auto part_one = std::make_shared<leaf_set>();
-    auto part_two = std::make_shared<leaf_set>();
-
-    assert(n > 0 && n <= number_partition_tuples(partitions));
-
-    for (size_t i = 0; i < partitions.size(); i++) {
-        if (is_bit_set(n, i)) {
-            part_one->insert(partitions[i]->begin(), partitions[i]->end());
-        } else {
-            part_two->insert(partitions[i]->begin(), partitions[i]->end());
-        }
-    }
-
-    return std::make_tuple(part_one, part_two);
-}
-
 size_t list_trees(const std::vector<constraint> &constraints,
-                  const leaf &root_species_name,
-                  const leaf_set &leaves, FILE *file) {
+                  const leaf &root_id,
+                  const leaf_set &leaves,
+                  const std::vector<std::string> &leaf_to_label,
+                  FILE *file) {
+    auto all_trees = find_all_unrooted_trees(leaves, constraints, root_id);
 
-    auto all_trees = find_all_unrooted_trees(leaves,
-                                             constraints,
-                                             root_species_name);
-
-    if (file != nullptr) {
+    if (file != nullptr) { // nullptr means just counting
         for (std::shared_ptr<Tree> t : all_trees) {
-            fprintf(file, "%s\n", t->to_newick_string().c_str());
+            fprintf(file, "%s\n", t->to_newick_string(leaf_to_label).c_str());
         }
     }
     return all_trees.size();
-
 }
 
-static std::shared_ptr<Tree> root(std::shared_ptr<Tree> t) {
-    if (t->parent == nullptr) {
-        return t;
+std::vector<std::shared_ptr<Tree>> find_all_unrooted_trees(
+        const leaf_set &leaves, const std::vector<constraint> &constraints,
+        const leaf &root_id) {
+    //TODO assert(leaves.count(root_id) > 0);
+
+    auto part_left = std::make_shared<leaf_set>();
+    auto part_right = std::make_shared<leaf_set>();
+
+    part_left->insert(root_species_name);
+    part_right->insert(leaves.begin(), leaves.end());
+    part_right->erase(root_species_name);
+
+    auto constraints_left = find_constraints(*part_left, constraints);
+    auto constraints_right = find_constraints(*part_right, constraints);
+
+    auto subtrees_left = find_all_rooted_trees(*part_left, constraints_left);
+    auto subtrees_right = find_all_rooted_trees(*part_right, constraints_right);
+    auto trees = merge_subtrees(subtrees_left, subtrees_right);
+
+    std::vector<std::shared_ptr<Tree> > result;
+    result.reserve(trees.size());
+    for (auto &t : trees) {
+        result.push_back(std::make_shared<Tree>(t));
     }
 
-    return root(t->parent);
+    return result;
 }
 
 static std::vector<std::shared_ptr<Tree> > add_leaf_to_tree(
         std::shared_ptr<Tree> current_tree, const leaf leaf) {
-
     std::vector<std::shared_ptr<Tree> > result;
 
     if (!current_tree->is_leaf()) {
@@ -109,35 +104,28 @@ std::vector<std::shared_ptr<Tree> > get_all_binary_trees(
     return result;
 }
 
-std::vector<std::shared_ptr<Tree> > find_all_unrooted_trees(
-        const leaf_set &leaves,
-        const std::vector<constraint> &constraints,
-        const leaf &root_species_name) {
+/*
+std::tuple<std::shared_ptr<leaf_set>,
+        std::shared_ptr<leaf_set> > get_nth_partition_tuple(
+        std::vector<std::shared_ptr<leaf_set> > &partitions,
+        size_t n) {
 
-    assert(leaves.count(root_species_name) > 0);
+    auto part_one = std::make_shared<leaf_set>();
+    auto part_two = std::make_shared<leaf_set>();
 
-    auto part_left = std::make_shared<leaf_set>();
-    auto part_right = std::make_shared<leaf_set>();
+    assert(n > 0 && n <= number_partition_tuples(partitions));
 
-    part_left->insert(root_species_name);
-    part_right->insert(leaves.begin(), leaves.end());
-    part_right->erase(root_species_name);
-
-    auto constraints_left = find_constraints(*part_left, constraints);
-    auto constraints_right = find_constraints(*part_right, constraints);
-
-    auto subtrees_left = find_all_rooted_trees(*part_left, constraints_left);
-    auto subtrees_right = find_all_rooted_trees(*part_right, constraints_right);
-    auto trees = merge_subtrees(subtrees_left, subtrees_right);
-
-    std::vector<std::shared_ptr<Tree> > result;
-    result.reserve(trees.size());
-    for (auto &t : trees) {
-        result.push_back(std::make_shared<Tree>(t));
+    for (size_t i = 0; i < partitions.size(); i++) {
+        if (is_bit_set(n, i)) {
+            part_one->insert(partitions[i]->begin(), partitions[i]->end());
+        } else {
+            part_two->insert(partitions[i]->begin(), partitions[i]->end());
+        }
     }
 
-    return result;
+    return std::make_tuple(part_one, part_two);
 }
+*/
 
 std::vector<std::shared_ptr<Tree> > find_all_rooted_trees(
         const leaf_set &leaves,
@@ -189,151 +177,10 @@ std::vector<std::shared_ptr<Tree> > merge_subtrees(
     return merged_trees;
 }
 
-std::vector<std::shared_ptr<leaf_set> > apply_constraints(
-        const leaf_set &leaves,
-        const std::vector<constraint> &constraints) {
-
-    std::vector<std::shared_ptr<leaf_set> > sets;
-
-    for (leaf l : leaves) {
-        // create an empty set for each leaf
-        std::shared_ptr<leaf_set> set(new leaf_set);
-        set->insert(l);
-        sets.push_back(set);
+static std::shared_ptr<Tree> root(std::shared_ptr<Tree> t) {
+    if (t->parent == nullptr) {
+        return t;
     }
 
-    bool found_left_constraint = false;
-    bool found_right_constraint = false;
-    size_t index_containing_left_constraint = 0;
-    size_t index_containing_right_constraint = 0;
-
-    for (constraint cons : constraints) {
-        for (size_t i = 0; i < sets.size(); i++) {
-            if (sets[i]->find(cons.smaller_left) != sets[i]->end()) {
-                // set contains the left constraint
-                found_left_constraint = true;
-                index_containing_left_constraint = i;
-            }
-            if (sets[i]->find(cons.smaller_right) != sets[i]->end()) {
-                // set contains the right constraint
-                found_right_constraint = true;
-                index_containing_right_constraint = i;
-            }
-        }
-        assert(
-                found_left_constraint
-                && index_containing_left_constraint < sets.size());
-        assert(
-                found_right_constraint
-                && index_containing_right_constraint < sets.size());
-        if (index_containing_left_constraint
-            != index_containing_right_constraint) {
-            // sets need to be merged
-            sets[index_containing_left_constraint]->insert(
-                    sets[index_containing_right_constraint]->begin(),
-                    sets[index_containing_right_constraint]->end());
-            sets.erase(sets.begin() + static_cast<decltype(sets)::difference_type>(index_containing_right_constraint));
-        }
-    }
-    return sets;
-}
-
-static std::tuple<leaf, leaf> extract_constraints_from_tree_rec(
-        const std::shared_ptr<Tree> node,
-        std::vector<constraint> &constraints) {
-
-    assert(node != nullptr);
-
-    if (node->is_leaf()) {
-        auto this_leaf = node->label;
-        return std::make_tuple(this_leaf, this_leaf);
-    }
-
-    // (l,r) of the left child node
-    leaf l_left_most;
-    leaf l_right_most;
-    std::tie(l_left_most, l_right_most) = extract_constraints_from_tree_rec(
-            node->left, constraints);
-
-    // (l,r) of the right child node
-    leaf r_left_most;
-    leaf r_right_most;
-    std::tie(r_left_most, r_right_most) = extract_constraints_from_tree_rec(
-            node->right, constraints);
-
-    if (l_left_most != l_right_most) {
-        constraint c;
-        c.smaller_left = l_left_most;
-        c.smaller_right = l_right_most;
-        c.bigger_left = l_left_most;
-        c.bigger_right = r_right_most;
-        constraints.push_back(c);
-    }
-
-    if (r_left_most != r_right_most) {
-        constraint c;
-        c.smaller_left = r_left_most;
-        c.smaller_right = r_right_most;
-        c.bigger_left = l_left_most;
-        c.bigger_right = r_right_most;
-        constraints.push_back(c);
-    }
-
-    return std::make_tuple(l_left_most, r_right_most);
-}
-
-leaf_set extract_leaf_labels_from_supertree(
-        std::shared_ptr<Tree> tree) {
-
-    leaf_set result;
-
-    if (tree == nullptr) {
-        return result;
-    }
-
-    auto result_left = extract_leaf_labels_from_supertree(tree->left);
-    result.insert(result_left.begin(), result_left.end());
-    auto result_right = extract_leaf_labels_from_supertree(tree->right);
-    result.insert(result_right.begin(), result_right.end());
-
-    if (tree->is_leaf()) {
-        result.insert(tree->label);
-    }
-
-    return result;
-}
-
-std::vector<constraint> extract_constraints_from_tree(
-        const std::shared_ptr<Tree> supertree) {
-    std::vector<constraint> constraints;
-
-    extract_constraints_from_tree_rec(supertree, constraints);
-
-    return constraints;
-}
-
-std::vector<constraint> find_constraints(const leaf_set &leaves,
-                                         const std::vector<constraint> &constraints) {
-
-    std::vector<constraint> valid_constraints;
-
-    for (constraint cons : constraints) {
-        if (cons.smaller_left == cons.bigger_left) {
-            if (leaves.find(cons.smaller_left) != leaves.end()
-                && leaves.find(cons.smaller_right) != leaves.end()
-                && leaves.find(cons.bigger_right) != leaves.end()) {
-                // constraint is valid on leaf set
-                valid_constraints.push_back(cons);
-            }
-        } else {
-            // smaller_right == bigger_right
-            if (leaves.find(cons.smaller_left) != leaves.end()
-                && leaves.find(cons.smaller_right) != leaves.end()
-                && leaves.find(cons.bigger_left) != leaves.end()) {
-                // constraint is valid on leaf set
-                valid_constraints.push_back(cons);
-            }
-        }
-    }
-    return valid_constraints;
+    return root(t->parent);
 }

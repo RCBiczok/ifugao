@@ -1,5 +1,8 @@
+#include <gmp.h>
+
 #include "input_parser.h"
 #include "terraces.h"
+
 
 //TODO: Not that intuitive
 int main(int argc, char *argv[]) {
@@ -7,6 +10,7 @@ int main(int argc, char *argv[]) {
         printf(
                 "Specify .data and .nwk as first and second argument to analyze them.\n");
     }
+    //TODO shouldn't we stop if argc != 3?
     input_data *read_data = parse_input_data(argv[1]);
     char *read_tree = read_newk_tree(argv[2]);
 

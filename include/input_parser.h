@@ -16,13 +16,6 @@ extern "C" {
 #endif
 
 /**
- * Free the input data d points to including the struct.
- *
- * @param d The input data to free
- */
-void free_input_data(input_data* d);
-
-/**
  * Parse the input data from the given data file.
  * The struct must be freed afterwards by the caller using free_input_data.
  *
@@ -31,6 +24,13 @@ void free_input_data(input_data* d);
  * @return The parsed input data or NULL if the data could not be parsed.
  */
 input_data* parse_input_data(const char* data_file);
+
+/**
+ * Free the input data d points to including the struct.
+ *
+ * @param d The input data to free
+ */
+void free_input_data(input_data* d);
 
 /**
  * Reads the newk tree from the given file.

@@ -18,62 +18,6 @@
 #include <stdbool.h>
 #include <gmp.h>
 
-#ifndef DEBUG
-
-static void d_print_tree_rec(const ntree_t *tree, int depth) {
-    for (int j = 0; j < depth * 4; j++) {
-        fprintf(stderr, " ");
-    }
-    fprintf(stderr, "<node label=\"%s\">", tree->label);
-    if(tree->children_count > 0) {
-        fprintf(stderr, "\n");
-    }
-    for (int i = 0; i < tree->children_count; i++) {
-        d_print_tree_rec(tree->children[i], depth + 1);
-    }
-    if(tree->children_count > 0) {
-        for (int j = 0; j < depth * 4; j++) {
-            fprintf(stderr, " ");
-        }
-    }
-    fprintf(stderr, "<node/>\n");
-}
-
-void d_print_tree_impl(const char* file, const int line, const ntree_t *tree) {
-    fprintf(stderr, "DEBUG(%s, %d): Dump ntree_t:\n", file, line);
-    d_print_tree_rec(tree, 1);
-}
-
-static void d_print_tree_rec(const std::shared_ptr<Tree> tree, int depth) {
-    fprintf(stderr, "Label: %s\n", tree->label.c_str());
-    assert(
-            depth == 1
-            || (tree->parent != nullptr
-                && (tree->parent->left == tree
-                    || tree->parent->right == tree)));
-    if (tree->left != nullptr) {
-        for (int j = 0; j < depth * 4; j++) {
-            fprintf(stderr, " ");
-        }
-        fprintf(stderr, "L:");
-        d_print_tree_rec(tree->left, depth + 1);
-    }
-    if (tree->right != nullptr) {
-        for (int j = 0; j < depth * 4; j++) {
-            fprintf(stderr, " ");
-        }
-        fprintf(stderr, "R:");
-        d_print_tree_rec(tree->right, depth + 1);
-    }
-}
-
-void d_print_tree_impl(const char* file, const int line, const std::shared_ptr<Tree> tree) {
-    fprintf(stderr, "DEBUG(%s, %d): Dump Tree:\n", file, line);
-    d_print_tree_rec(tree, 1);
-}
-
-#endif /* DEBUG */
-
 int terraceAnalysis(missingData *m,
                     const char *newickTreeString,
                     const int ta_outspec,
@@ -120,7 +64,7 @@ int terraceAnalysis(missingData *m,
 
     assert(tree != nullptr);
 
-    std::string root_species_name;
+    size_t root_species_name;
     std::shared_ptr<Tree> rtree = root_tree(tree, m, root_species_name);
 
     assert(rtree != nullptr);
@@ -265,16 +209,17 @@ std::vector<constraint> extract_constraints_from_supertree(
     for (unsigned char i = 0; i < missing_data->numberOfSpecies; i++) {
         species_map[std::string(missing_data->speciesNames[i])] = i;
     }
-
-    std::map<std::string, constraint> constraint_map;
+    typedef std::tuple<size_t, size_t, size_t, size_t> constraint_key;
+    std::map<constraint_key, constraint> constraint_map;
 
     for (size_t i = 0; i < missing_data->numberOfPartitions; i++) {
         auto partition = generate_induced_tree(supertree, missing_data,
                                                species_map, i);
+        
         for (auto &c : extract_constraints_from_tree(partition)) {
             //avoid duplications
-            std::string key = c.smaller_left + c.smaller_right + c.bigger_left
-                              + c.bigger_right;
+            constraint_key key(c.smaller_left, c.smaller_right, c.bigger_left,
+                               c.bigger_right);
             if (constraint_map.count(key) == 0) {
                 constraint_map[key] = c;
             }
@@ -288,3 +233,59 @@ std::vector<constraint> extract_constraints_from_supertree(
 
     return result;
 }
+
+#ifndef DEBUG
+
+static void d_print_tree_rec(const ntree_t *tree, int depth) {
+    for (int j = 0; j < depth * 4; j++) {
+        fprintf(stderr, " ");
+    }
+    fprintf(stderr, "<node label=\"%s\">", tree->label);
+    if(tree->children_count > 0) {
+        fprintf(stderr, "\n");
+    }
+    for (int i = 0; i < tree->children_count; i++) {
+        d_print_tree_rec(tree->children[i], depth + 1);
+    }
+    if(tree->children_count > 0) {
+        for (int j = 0; j < depth * 4; j++) {
+            fprintf(stderr, " ");
+        }
+    }
+    fprintf(stderr, "<node/>\n");
+}
+
+void d_print_tree_impl(const char* file, const int line, const ntree_t *tree) {
+    fprintf(stderr, "DEBUG(%s, %d): Dump ntree_t:\n", file, line);
+    d_print_tree_rec(tree, 1);
+}
+
+static void d_print_tree_rec(const std::shared_ptr<Tree> tree, int depth) {
+    fprintf(stderr, "Label: %s\n", tree->label.c_str());
+    assert(
+            depth == 1
+            || (tree->parent != nullptr
+                && (tree->parent->left == tree
+                    || tree->parent->right == tree)));
+    if (tree->left != nullptr) {
+        for (int j = 0; j < depth * 4; j++) {
+            fprintf(stderr, " ");
+        }
+        fprintf(stderr, "L:");
+        d_print_tree_rec(tree->left, depth + 1);
+    }
+    if (tree->right != nullptr) {
+        for (int j = 0; j < depth * 4; j++) {
+            fprintf(stderr, " ");
+        }
+        fprintf(stderr, "R:");
+        d_print_tree_rec(tree->right, depth + 1);
+    }
+}
+
+void d_print_tree_impl(const char* file, const int line, const std::shared_ptr<Tree> tree) {
+    fprintf(stderr, "DEBUG(%s, %d): Dump Tree:\n", file, line);
+    d_print_tree_rec(tree, 1);
+}
+
+#endif /* DEBUG */

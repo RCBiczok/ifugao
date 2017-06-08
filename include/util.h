@@ -22,8 +22,8 @@
  * @return the subtree T|G_i.
  */
 std::shared_ptr<Tree> generate_induced_tree(const std::shared_ptr<Tree> tree,
-		const missingData *missing_data,
-		std::map<std::string, unsigned char>& first, size_t partition);
+        const missingData *missing_data,
+        std::map<std::string, unsigned char>& first, size_t partition);
 
 /**
  * This function roots the tree at an appropriate position according to the missing data array
@@ -56,7 +56,7 @@ std::shared_ptr<Tree> root_at(ntree_t *root);
  * @param parent the ntree_t represention of the parent. this is needed to avoid calling the recursion on the parent
  */
 void recursive_root(std::shared_ptr<Tree> current, ntree_t *current_ntree,
-		ntree_t *parent);
+        ntree_t *parent);
 
 /**
  * @brief check_tree do a dfs on the tree and check, if the childs parent is the current node.

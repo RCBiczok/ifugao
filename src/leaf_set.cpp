@@ -48,7 +48,7 @@ std::vector<BitLeafSet> BitLeafSet::apply_constraints(
 }
 
 bool BitLeafSet::contains(size_t leaf) {
-    return set[leaf];
+    return set.test(leaf);
 }
 
 std::tuple<BitLeafSet, BitLeafSet> BitLeafSet::get_nth_partition_tuple(
@@ -57,16 +57,19 @@ std::tuple<BitLeafSet, BitLeafSet> BitLeafSet::get_nth_partition_tuple(
     LeafSet part_two;
     
     assert(n > 0 && n <= number_partition_tuples(partitions));
-//TODO think of sth smart
-/*    for (size_t i = 0; i < partitions.size(); i++) {
+    assert(is_bit_set(n,0)==false); // 1st bit is never set
+    
+    for (size_t i = 1; i < partitions.size(); i++) {
         if (is_bit_set(n, i)) {
-            part_one->insert(partitions[i]->begin(), partitions[i]->end());
+            part_one.set|=partitions[i].set;
         } else {
-            part_two->insert(partitions[i]->begin(), partitions[i]->end());
+            part_two.set|=partitions[i].set;
         }
     }
-*/
+    
+    // no bit may be set in both sets
+    assert(!(part_one.set & part_two.set).any());
+    
     return std::make_tuple(part_one, part_two);
-
 }
 

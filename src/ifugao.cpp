@@ -4,11 +4,14 @@
 #include <map>
 
 size_t list_trees(const std::vector<constraint> &constraints,
-                  const leaf &root_id,
-                  const leaf_set &leaves,
+                  const size_t &root_id,
+                  const LeafSet &leaf_set,
                   const std::vector<std::string> &leaf_to_label,
                   FILE *file) {
-    auto all_trees = find_all_unrooted_trees(leaves, constraints, root_id);
+    /*//unroot tree
+    leaf_set.remove_leaf(root_id);
+    auto subtrees = find_all_rooted_trees(leaf_set, constraints);*/
+    auto all_trees = find_all_unrooted_trees(leaf_set, constraints, root_id);
 
     if (file != nullptr) { // nullptr means just counting
         for (std::shared_ptr<Tree> t : all_trees) {
@@ -19,45 +22,39 @@ size_t list_trees(const std::vector<constraint> &constraints,
 }
 
 std::vector<std::shared_ptr<Tree>> find_all_unrooted_trees(
-        const leaf_set &leaves, const std::vector<constraint> &constraints,
-        const leaf &root_id) {
-    //TODO assert(leaves.count(root_id) > 0);
+        const LeafSet &leaf_set, const std::vector<constraint> &constraints,
+        const size_t &root_id) {
+    //TODO assert(leaf_set.count(root_id) > 0);
 
-    auto part_left = std::make_shared<leaf_set>();
-    auto part_right = std::make_shared<leaf_set>();
-
-    part_left->insert(root_species_name);
-    part_right->insert(leaves.begin(), leaves.end());
-    part_right->erase(root_species_name);
-
-    auto constraints_left = find_constraints(*part_left, constraints);
-    auto constraints_right = find_constraints(*part_right, constraints);
-
-    auto subtrees_left = find_all_rooted_trees(*part_left, constraints_left);
-    auto subtrees_right = find_all_rooted_trees(*part_right, constraints_right);
-    auto trees = merge_subtrees(subtrees_left, subtrees_right);
-
-    std::vector<std::shared_ptr<Tree> > result;
-    result.reserve(trees.size());
-    for (auto &t : trees) {
-        result.push_back(std::make_shared<Tree>(t));
-    }
-
-    return result;
+    LeafSet part_left;
+    LeafSet part_right;
+    
+    // TODO abstract into leaf_set.h
+    part_left.set.set(root_id);
+    part_right = part_left.get_complementing_leaf_set_to_base(leaf_set);
+    
+    auto constraints_left = find_constraints(part_left, constraints);
+    auto constraints_right = find_constraints(part_right, constraints);
+    
+    auto subtrees_left = find_all_rooted_trees(part_left, constraints_left);
+    auto subtrees_right = find_all_rooted_trees(part_right, constraints_right);
+    
+    return merge_subtrees(subtrees_left, subtrees_right);
 }
 
 static std::vector<std::shared_ptr<Tree> > add_leaf_to_tree(
-        std::shared_ptr<Tree> current_tree, const leaf leaf) {
+        std::shared_ptr<Node> current_node, const size_t leaf) {
     std::vector<std::shared_ptr<Tree> > result;
-
-    if (!current_tree->is_leaf()) {
-        auto result_left = add_leaf_to_tree(current_tree->left, leaf);
+    /* this is not what we want. no copying, only pointer reusing is desired
+TODO rewrite
+    if (!current_node->is_leaf()) {
+        auto result_left = add_leaf_to_tree(current_node->left, leaf);
         result.insert(result.end(), result_left.begin(), result_left.end());
-        auto result_right = add_leaf_to_tree(current_tree->right, leaf);
+        auto result_right = add_leaf_to_tree(current_node->right, leaf);
         result.insert(result.end(), result_right.begin(), result_right.end());
     }
 
-    auto tree_copy = deep_copy(current_tree);
+    auto tree_copy = deep_copy(current_node);
 
     auto to_insert = std::make_shared<Tree>(leaf);
     auto new_tree = std::make_shared<Tree>(tree_copy, to_insert);
@@ -73,83 +70,58 @@ static std::vector<std::shared_ptr<Tree> > add_leaf_to_tree(
     to_insert->parent = new_tree;
 
     result.push_back(root(new_tree));
-
+*/
     return result;
 }
 
 std::vector<std::shared_ptr<Tree> > get_all_binary_trees(
-        const leaf_set &leaves) {
-
+        const LeafSet &leaf_set) {
     std::vector<std::shared_ptr<Tree> > result;
-    if (leaves.size() == 0) {
+    if (leaf_set.size() == 0) {
         return result;
     }
-
-    auto itr = leaves.begin();
-    leaf next_leaf = *itr;
+/* TODO
+    auto itr = leaf_set.begin();
+    size_t next_leaf = *itr;
     itr++;
-    leaf_set rest_leaves(itr, leaves.end());
+    LeafSet rest_leaf_set(itr, leaf_set.end());
 
-    if (leaves.size() == 1) {
+    if (leaf_set.size() == 1) {
         auto t = std::make_shared<Tree>(next_leaf);
         result.push_back(t);
         return result;
     }
 
-    for (auto t : get_all_binary_trees(rest_leaves)) {
+    for (auto t : get_all_binary_trees(rest_leaf_set)) {
         auto new_trees = add_leaf_to_tree(t, next_leaf);
         result.insert(result.end(), new_trees.begin(), new_trees.end());
     }
-
+*/
     return result;
 }
 
-/*
-std::tuple<std::shared_ptr<leaf_set>,
-        std::shared_ptr<leaf_set> > get_nth_partition_tuple(
-        std::vector<std::shared_ptr<leaf_set> > &partitions,
-        size_t n) {
-
-    auto part_one = std::make_shared<leaf_set>();
-    auto part_two = std::make_shared<leaf_set>();
-
-    assert(n > 0 && n <= number_partition_tuples(partitions));
-
-    for (size_t i = 0; i < partitions.size(); i++) {
-        if (is_bit_set(n, i)) {
-            part_one->insert(partitions[i]->begin(), partitions[i]->end());
-        } else {
-            part_two->insert(partitions[i]->begin(), partitions[i]->end());
-        }
-    }
-
-    return std::make_tuple(part_one, part_two);
-}
-*/
-
-std::vector<std::shared_ptr<Tree> > find_all_rooted_trees(
-        const leaf_set &leaves,
+std::vector<std::shared_ptr<Node> > find_all_rooted_trees(
+        const LeafSet &leaf_set,
         const std::vector<constraint> &constraints) {
-
     if (constraints.empty()) {
-        auto result = get_all_binary_trees(leaves);
-        return result;
+        // no more constraints, return all possible combinations
+        return get_all_binary_trees(leaf_set);
     }
 
-    auto partitions = apply_constraints(leaves, constraints);
+    auto partitions = apply_constraints(leaf_set, constraints);
     std::vector<std::shared_ptr<Tree> > result;
 
     for (size_t i = 1; i <= number_partition_tuples(partitions); i++) {
-        std::shared_ptr<leaf_set> part_left;
-        std::shared_ptr<leaf_set> part_right;
-        std::tie(part_left, part_right) = get_nth_partition_tuple(partitions,
-                                                                  i);
+        std::shared_ptr<LeafSet> part_left;
+        std::shared_ptr<LeafSet> part_right;
+        std::tie(part_left, part_right) =
+                leaf_set.get_nth_partition_tuple(partitions,i);
 
-        auto constraints_left = find_constraints(*part_left, constraints);
-        auto constraints_right = find_constraints(*part_right, constraints);
+        auto constraints_left = find_constraints(part_left, constraints);
+        auto constraints_right = find_constraints(part_right, constraints);
 
-        auto subtrees_left = find_all_rooted_trees(*part_left, constraints_left);
-        auto subtrees_right = find_all_rooted_trees(*part_right, constraints_right);
+        auto subtrees_left = find_all_rooted_trees(part_left, constraints_left);
+        auto subtrees_right = find_all_rooted_trees(part_right, constraints_right);
         auto trees = merge_subtrees(subtrees_left, subtrees_right);
 
         result.insert(result.end(), trees.begin(), trees.end());
@@ -159,16 +131,14 @@ std::vector<std::shared_ptr<Tree> > find_all_rooted_trees(
 }
 
 std::vector<std::shared_ptr<Tree> > merge_subtrees(
-        std::vector<std::shared_ptr<Tree> > &left,
-        std::vector<std::shared_ptr<Tree> > &right) {
+        std::vector<std::shared_ptr<Node> > &left,
+        std::vector<std::shared_ptr<Node> > &right) {
 
     std::vector<std::shared_ptr<Tree> > merged_trees;
 
-    for (std::shared_ptr<Tree> &l : left) {
-        for (std::shared_ptr<Tree> &r : right) {
+    for (std::shared_ptr<Node> &l : left) {
+        for (std::shared_ptr<Node> &r : right) {
             auto new_tree = std::make_shared<Tree>(l, r);
-            l->parent = new_tree;
-            r->parent = new_tree;
             merged_trees.push_back(new_tree);
         }
     }

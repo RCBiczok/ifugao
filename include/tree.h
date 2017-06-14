@@ -23,13 +23,11 @@ public:
 
 class InnerNode : Node {
 public:
-    InnerNode(std::shared_ptr<Node> left, std::shared_ptr<Node> right,
-              std::shared_ptr<Node> parent) :
-            left(left), right(right), parent(parent) {}
+    InnerNode(std::shared_ptr<Node> left, std::shared_ptr<Node> right) :
+            left(left), right(right) { }
 
     std::shared_ptr<Node> left;
     std::shared_ptr<Node> right;
-    std::shared_ptr<Node> parent;
 
     bool is_leaf() {
         return false;

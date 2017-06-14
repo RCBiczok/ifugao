@@ -48,22 +48,27 @@ std::vector<BitLeafSet> BitLeafSet::apply_constraints(
 }
 
 bool BitLeafSet::contains(size_t leaf) {
+    assert(leaf < set.size());
+    
     return set.test(leaf);
 }
 
 std::tuple<BitLeafSet, BitLeafSet> BitLeafSet::get_nth_partition_tuple(
-            std::vector<BitLeafSet> &partitions, size_t n) {
+            std::vector<LeafSet> &partitions, size_t n) {
+    
+    //TODO asserts
+    // TODO assert partitions isoftype std::vector<BitLeafSet>
     LeafSet part_one;
     LeafSet part_two;
     
-    assert(n > 0 && n <= number_partition_tuples(partitions));
-    assert(is_bit_set(n,0)==false); // 1st bit is never set
+    //TODO assert(n > 0 && n <= number_partition_tuples(partitions));
+    //TODO assert(is_bit_set(n,0)==false); // 1st bit is never set
     
     for (size_t i = 1; i < partitions.size(); i++) {
         if (is_bit_set(n, i)) {
-            part_one.set|=partitions[i].set;
+            part_one.set|=(BitLeafSet(partitions[i])).set;
         } else {
-            part_two.set|=partitions[i].set;
+            part_two.set|=(BitLeafSet(partitions[i])).set;
         }
     }
     
@@ -73,3 +78,23 @@ std::tuple<BitLeafSet, BitLeafSet> BitLeafSet::get_nth_partition_tuple(
     return std::make_tuple(part_one, part_two);
 }
 
+void BitLeafSet::insert_leaf(size_t leaf) {
+    assert(leaf < set.size());
+    
+    set.set(leaf);
+}
+
+void BitLeafSet::remove_leaf(size_t leaf) {
+    assert(leaf < set.size());
+    
+    set.reset(leaf);
+}
+
+BitLeafSet BitLeafSet::get_complementing_leaf_set_to_base(LeafSet base) {
+    // TODO assert base isoftype BitLeafSet
+    if (base == nullptr) {
+        return ~((BitLeafSet(base)).set);
+    } else {
+        return ~((BitLeafSet(base)).set) ^ base;
+    }
+}

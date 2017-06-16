@@ -1,14 +1,21 @@
+/*** DO NOT INCLUDE DIRECTLY, INCLUDE types.h INSTEAD ***/
+#pragma once
+
+//"constraints.h" included via types.h
+
 #include <boost/dynamic_bitset.hpp>
 #include <tuple>
-#include <vector>
 
-public class LeafSet {
+class LeafSet {
 public:
     virtual std::vector<LeafSet> apply_constraints(const std::vector<constraint> &constraints);
     virtual bool contains(size_t leaf);
-    virtual static std::tuple<LeafSet, LeafSet> get_nth_partition_tuple(
-            std::vector<LeafSet> &partitions, size_t n);
-    
+    static std::tuple<LeafSet, LeafSet> get_nth_partition_tuple(
+            std::vector<LeafSet> &partitions, size_t n) {
+        // Should never be called!
+        assert(false);
+        return nullptr;
+    }
     /**
      * Inserts the given leaf, if not already contained.
      * @param leaf The leaf to insert.
@@ -32,15 +39,15 @@ public:
     virtual LeafSet get_complementing_leaf_set_to_base(LeafSet base = nullptr);
 };
 
-public class BitLeafSet : LeafSet {
+class BitLeafSet : LeafSet {
 public:
-    std::vector<BitLeafSet> apply_constraints(const std::vector<constraint> &constraints);
+    std::vector<LeafSet> apply_constraints(const std::vector<constraint> &constraints);
     bool contains(size_t leaf);
-    static std::tuple<BitLeafSet, BitLeafSet> get_nth_partition_tuple(
+    static std::tuple<LeafSet, LeafSet> get_nth_partition_tuple(
             std::vector<LeafSet> &partitions, size_t n);
     void insert_leaf(size_t leaf);
     void remove_leaf(size_t leaf);
-    BitLeafSet get_complementing_leaf_set_to_base(LeafSet base = nullptr);
+    LeafSet get_complementing_leaf_set_to_base(LeafSet base = nullptr);
 
 private:
     boost::dynamic_bitset<> set;

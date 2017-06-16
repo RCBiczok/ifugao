@@ -6,10 +6,7 @@
 #include <assert.h>
 #include <iostream>
 
-#include "constraints.h"
-#include "leaf_set.h"
-#include "tree.h"
-
+#include "types.h"
 
 /**
  * Method calling overview:
@@ -28,31 +25,31 @@
  * Calculates the number of trees on the terrace.
  *
  * @param constraints All constraints to fulfill.
- * @param leaves All leaves of the tree.
+ * @param leaf_set All leaves of the tree.
  * @param root_species_name the root species
  * @param file File to write all trees in newick format into, iff file != nullptr.
  * @return Number of all trees on the terrace.
  */
 size_t list_trees(const std::vector<constraint> &constraints,
                   const size_t &root_id,
-                  const LeafSet &leaves,
+                  const LeafSet &leaf_set,
                   const std::vector<std::string> &leaf_to_label,
                   FILE *file);
 
 //TODO doc
 /** Combines all sets (constraints need to be applied already) */
 std::vector<std::shared_ptr<Tree> > find_all_unrooted_trees(
-        const LeafSet &leaves, const std::vector<constraint> &constraints,
+        const LeafSet &leaf_set, const std::vector<constraint> &constraints,
         const size_t &root_id);
 
 
 /** Combines all sets (constraints need to be applied already) */
 std::vector<std::shared_ptr<Tree> > find_all_rooted_trees(
-        const LeafSet &leaves,
+        const LeafSet &leaf_set,
         const std::vector<constraint> &constraints);
 
 
-std::vector<std::shared_ptr<Tree> > get_all_binary_trees(const LeafSet &leaves);
+std::vector<std::shared_ptr<Tree> > get_all_binary_trees(const LeafSet &leaf_set);
 
 /** merges two sub-trees */
 std::vector<std::shared_ptr<Tree> > merge_subtrees(

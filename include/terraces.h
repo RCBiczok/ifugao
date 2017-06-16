@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tree.h"
+#include "types.h"
 #include "ifugao.h"
 
 #include "input_parser.h"

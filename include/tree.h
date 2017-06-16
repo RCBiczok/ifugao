@@ -1,8 +1,6 @@
+/*** DO NOT INCLUDE DIRECTLY, INCLUDE types.h INSTEAD ***/
 #pragma once
 
-#include <memory> // for shared_ptr
-
-typedef InnerNode Tree;
 
 class Node {
 public:
@@ -33,6 +31,8 @@ public:
         return false;
     }
 };
+
+typedef InnerNode Tree;
 
 class UnrootedNode : Node {
 public:

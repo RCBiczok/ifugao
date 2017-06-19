@@ -8,10 +8,11 @@
 
 class LeafSet {
 public:
-    virtual std::vector<LeafSet> apply_constraints(const std::vector<constraint> &constraints);
-    virtual bool contains(size_t leaf);
+    virtual std::vector<LeafSet> apply_constraints(
+            const std::vector<constraint> &constraints);
+    virtual bool contains(const size_t leaf);
     static std::tuple<LeafSet, LeafSet> get_nth_partition_tuple(
-            std::vector<LeafSet> &partitions, size_t n) {
+            const std::vector<LeafSet> &partitions, const size_t n) {
         // Should never be called!
         assert(false);
         return nullptr;
@@ -20,13 +21,13 @@ public:
      * Inserts the given leaf, if not already contained.
      * @param leaf The leaf to insert.
      */
-    virtual void insert_leaf(size_t leaf);
+    virtual void insert_leaf(const size_t leaf);
     
     /**
      * Removes the given leaf, if contained.
      * @param leaf The leaf to remove.
      */
-    virtual void remove_leaf(size_t leaf);
+    virtual void remove_leaf(const size_t leaf);
     
     /**
      * Returns a LeafSet that contains all leaves which are not contained in
@@ -36,18 +37,19 @@ public:
      * @return A LeafSet that contains all leaves which are not contained in
      * this LeafSet, but in the base LeafSet.
      */
-    virtual LeafSet get_complementing_leaf_set_to_base(LeafSet base = nullptr);
+    virtual LeafSet get_complementing_leaf_set_to_base(const LeafSet &base);
 };
 
 class BitLeafSet : LeafSet {
 public:
-    std::vector<LeafSet> apply_constraints(const std::vector<constraint> &constraints);
-    bool contains(size_t leaf);
+    std::vector<LeafSet> apply_constraints(
+            const std::vector<constraint> &constraints);
+    bool contains(const size_t leaf);
     static std::tuple<LeafSet, LeafSet> get_nth_partition_tuple(
-            std::vector<LeafSet> &partitions, size_t n);
-    void insert_leaf(size_t leaf);
-    void remove_leaf(size_t leaf);
-    LeafSet get_complementing_leaf_set_to_base(LeafSet base = nullptr);
+            const std::vector<LeafSet> &partitions, const size_t n);
+    void insert_leaf(const size_t leaf);
+    void remove_leaf(const size_t leaf);
+    LeafSet get_complementing_leaf_set_to_base(const LeafSet base = nullptr);
 
 private:
     boost::dynamic_bitset<> set;

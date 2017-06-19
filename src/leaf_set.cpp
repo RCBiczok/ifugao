@@ -47,14 +47,14 @@ std::vector<BitLeafSet> BitLeafSet::apply_constraints(
     return new_sets;
 }
 
-bool BitLeafSet::contains(size_t leaf) {
+bool BitLeafSet::contains(const size_t leaf) {
     assert(leaf < set.size());
     
     return set.test(leaf);
 }
 
 std::tuple<BitLeafSet, BitLeafSet> BitLeafSet::get_nth_partition_tuple(
-            std::vector<LeafSet> &partitions, size_t n) {
+            const std::vector<LeafSet> &partitions, const size_t n) {
     
     //TODO asserts
     // TODO assert partitions isoftype std::vector<BitLeafSet>
@@ -78,19 +78,19 @@ std::tuple<BitLeafSet, BitLeafSet> BitLeafSet::get_nth_partition_tuple(
     return std::make_tuple(part_one, part_two);
 }
 
-void BitLeafSet::insert_leaf(size_t leaf) {
+void BitLeafSet::insert_leaf(const size_t leaf) {
     assert(leaf < set.size());
     
     set.set(leaf);
 }
 
-void BitLeafSet::remove_leaf(size_t leaf) {
+void BitLeafSet::remove_leaf(const size_t leaf) {
     assert(leaf < set.size());
     
     set.reset(leaf);
 }
 
-BitLeafSet BitLeafSet::get_complementing_leaf_set_to_base(LeafSet base) {
+BitLeafSet BitLeafSet::get_complementing_leaf_set_to_base(const LeafSet &base) {
     // TODO assert base isoftype BitLeafSet
     if (base == nullptr) {
         return ~((BitLeafSet(base)).set);

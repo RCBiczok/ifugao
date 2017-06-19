@@ -4,16 +4,19 @@
 
 class Node {
 public:
-    virtual std::string to_newick_string(std::vector<std::string> &leaf_number_to_label);
+    virtual std::string to_newick_string(
+            const std::vector<std::string> &leaf_number_to_label);
     virtual bool is_leaf();
 };
 
 class Leaf : Node {
 public:
-    Leaf(leaf leaf_id) : leaf_id(leaf_id) {}
+    Leaf(size_t leaf_id) : leaf_id(leaf_id) {}
 
-    leaf leaf_id;
-
+    size_t leaf_id;
+    
+    std::string to_newick_string(
+            const std::vector<std::string> &leaf_number_to_label);
     bool is_leaf() {
         return true;
     }
@@ -27,6 +30,8 @@ public:
     std::shared_ptr<Node> left;
     std::shared_ptr<Node> right;
 
+    std::string to_newick_string(
+            const std::vector<std::string> &leaf_number_to_label);
     bool is_leaf() {
         return false;
     }
@@ -44,11 +49,24 @@ public:
     std::shared_ptr<Node> elem2;
     std::shared_ptr<Node> elem3;
 
-
+    std::string to_newick_string(
+            const std::vector<std::string> &leaf_number_to_label);
     bool is_leaf() {
         return false;
     }
 };
 
-//TODO std::shared_ptr<Tree> deep_copy(std::shared_ptr<Tree> tree);
+class AllBinaryCombinationsNode : Node {
+public:
+    AllBinaryCombinationsNode(std::vector<size_t> leaves) : leaves(leaves) {
+        assert(leaves.size() > 0);
+    }
 
+    std::vector<size_t> leaves;
+    
+    std::string to_newick_string(
+            const std::vector<std::string> &leaf_number_to_label);
+    bool is_leaf() {
+        return false;
+    }
+};

@@ -29,8 +29,7 @@ std::vector<std::shared_ptr<Tree>> find_all_unrooted_trees(
     LeafSet part_left;
     LeafSet part_right;
     
-    // TODO abstract into leaf_set.h
-    part_left.set.set(root_id);
+    part_left.insert_leaf(root_id);
     part_right = part_left.get_complementing_leaf_set_to_base(leaf_set);
     
     auto constraints_left = find_constraints(part_left, constraints);
@@ -42,91 +41,51 @@ std::vector<std::shared_ptr<Tree>> find_all_unrooted_trees(
     return merge_subtrees(subtrees_left, subtrees_right);
 }
 
-static std::vector<std::shared_ptr<Tree> > add_leaf_to_tree(
-        std::shared_ptr<Node> current_node, const size_t leaf) {
-    std::vector<std::shared_ptr<Tree> > result;
-    /* this is not what we want. no copying, only pointer reusing is desired
-TODO rewrite
-    if (!current_node->is_leaf()) {
-        auto result_left = add_leaf_to_tree(current_node->left, leaf);
-        result.insert(result.end(), result_left.begin(), result_left.end());
-        auto result_right = add_leaf_to_tree(current_node->right, leaf);
-        result.insert(result.end(), result_right.begin(), result_right.end());
-    }
-
-    auto tree_copy = deep_copy(current_node);
-
-    auto to_insert = std::make_shared<Tree>(leaf);
-    auto new_tree = std::make_shared<Tree>(tree_copy, to_insert);
-    new_tree->parent = tree_copy->parent;
-    if (tree_copy->parent != nullptr) {
-        if (tree_copy->parent->left == tree_copy) {
-            tree_copy->parent->left = new_tree;
-        } else {
-            tree_copy->parent->right = new_tree;
-        }
-    }
-    tree_copy->parent = new_tree;
-    to_insert->parent = new_tree;
-
-    result.push_back(root(new_tree));
-*/
-    return result;
-}
-
-std::vector<std::shared_ptr<Tree> > get_all_binary_trees(
-        const LeafSet &leaf_set) {
-    std::vector<std::shared_ptr<Tree> > result;
-    if (leaf_set.size() == 0) {
-        return result;
-    }
-/* TODO
-    auto itr = leaf_set.begin();
-    size_t next_leaf = *itr;
-    itr++;
-    LeafSet rest_leaf_set(itr, leaf_set.end());
-
-    if (leaf_set.size() == 1) {
-        auto t = std::make_shared<Tree>(next_leaf);
-        result.push_back(t);
-        return result;
-    }
-
-    for (auto t : get_all_binary_trees(rest_leaf_set)) {
-        auto new_trees = add_leaf_to_tree(t, next_leaf);
-        result.insert(result.end(), new_trees.begin(), new_trees.end());
-    }
-*/
-    return result;
-}
-
 std::vector<std::shared_ptr<Node> > find_all_rooted_trees(
         const LeafSet &leaf_set,
         const std::vector<constraint> &constraints) {
-    if (constraints.empty()) {
-        // no more constraints, return all possible combinations
-        return get_all_binary_trees(leaf_set);
-    }
-
-    auto partitions = apply_constraints(leaf_set, constraints);
     std::vector<std::shared_ptr<Tree> > result;
+    if (constraints.empty()) {
+        // no more constraints, create a Node for all possible combinations
+        auto leaves = leaf_set.getAllLeaves();
+        auto tree = make_shared<AllBinaryCombinationsNode>(leaves);
+        result.push_back(tree);
+    } else {
+        auto partitions = apply_constraints(leaf_set, constraints);
 
-    for (size_t i = 1; i <= number_partition_tuples(partitions); i++) {
-        std::shared_ptr<LeafSet> part_left;
-        std::shared_ptr<LeafSet> part_right;
-        std::tie(part_left, part_right) =
-                leaf_set.get_nth_partition_tuple(partitions,i);
+        for (size_t i = 1; i <= number_partition_tuples(partitions); i++) {
+            std::shared_ptr<LeafSet> part_left;
+            std::shared_ptr<LeafSet> part_right;
+            //TODO compression would go here and probably look sth like:
+            /*if(!leaf_set.isDenseEnough()) {
+                std::tuple new_leaf_set = leaf_set.getCompressedSet();
+                compressed=true;
+            }
+            // normal steps
+            
+            if(compressed) {
+                //uncompress
+            }
+            
+            Also a vector containing all leaves is probably helpful, so we don't 
+            need to search for them in the trees but simply have a vector. 
+            
+            
+            */
+            std::tie(part_left, part_right) =
+                    leaf_set.get_nth_partition_tuple(partitions,i);
 
-        auto constraints_left = find_constraints(part_left, constraints);
-        auto constraints_right = find_constraints(part_right, constraints);
+            auto constraints_left = find_constraints(part_left, constraints);
+            auto constraints_right = find_constraints(part_right, constraints);
 
-        auto subtrees_left = find_all_rooted_trees(part_left, constraints_left);
-        auto subtrees_right = find_all_rooted_trees(part_right, constraints_right);
-        auto trees = merge_subtrees(subtrees_left, subtrees_right);
+            auto subtrees_left = find_all_rooted_trees(part_left, constraints_left);
+            auto subtrees_right = find_all_rooted_trees(part_right, constraints_right);
+            auto trees = merge_subtrees(subtrees_left, subtrees_right);
 
-        result.insert(result.end(), trees.begin(), trees.end());
+            result.insert(result.end(), trees.begin(), trees.end());
+        }
+
     }
-
     return result;
 }
 
@@ -145,12 +104,4 @@ std::vector<std::shared_ptr<Tree> > merge_subtrees(
 
     assert(merged_trees.size() == left.size() * right.size());
     return merged_trees;
-}
-
-static std::shared_ptr<Tree> root(std::shared_ptr<Tree> t) {
-    if (t->parent == nullptr) {
-        return t;
-    }
-
-    return root(t->parent);
 }

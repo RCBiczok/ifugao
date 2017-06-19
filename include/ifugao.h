@@ -49,8 +49,6 @@ std::vector<std::shared_ptr<Tree> > find_all_rooted_trees(
         const std::vector<constraint> &constraints);
 
 
-std::vector<std::shared_ptr<Tree> > get_all_binary_trees(const LeafSet &leaf_set);
-
 /** merges two sub-trees */
 std::vector<std::shared_ptr<Tree> > merge_subtrees(
         std::vector<std::shared_ptr<Tree> > &left,

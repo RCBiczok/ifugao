@@ -95,7 +95,7 @@ size_t BitLeafSet::size() const {
     return set.count();
 }
 
-std::vector<size_t> BitLeafSet::get_all_nodes() const {
+std::vector<size_t> BitLeafSet::get_all_leaves() const {
     std:vector<size_t> result;
     size_t current_pos = set.find_next(0);
     

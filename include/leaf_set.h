@@ -25,7 +25,7 @@ public:
      */
     virtual void remove_leaf(const size_t leaf);
     virtual size_t size() const;
-    virtual std::vector<size_t> get_all_nodes() const;
+    virtual std::vector<size_t> get_all_leaves() const;
 };
 
 class BitLeafSet : LeafSet {
@@ -38,7 +38,7 @@ public:
     void insert_leaf(const size_t leaf);
     void remove_leaf(const size_t leaf);
     size_t size() const;
-    std::vector<size_t> get_all_nodes() const;
+    std::vector<size_t> get_all_leaves() const;
     
 private:
     boost::dynamic_bitset<> set;

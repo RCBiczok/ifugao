@@ -9,7 +9,7 @@ public:
     virtual bool is_leaf();
 };
 
-class Leaf : Node {
+class Leaf : public Node {
 public:
     Leaf(size_t leaf_id) : leaf_id(leaf_id) {}
 
@@ -22,7 +22,7 @@ public:
     }
 };
 
-class InnerNode : Node {
+class InnerNode : public Node {
 public:
     InnerNode(std::shared_ptr<Node> left, std::shared_ptr<Node> right) :
             left(left), right(right) { }
@@ -39,7 +39,7 @@ public:
 
 typedef InnerNode Tree;
 
-class UnrootedNode : Node {
+class UnrootedNode : public Node {
 public:
     UnrootedNode(std::shared_ptr<Node> elem1, std::shared_ptr<Node> elem2,
                  std::shared_ptr<Node> elem3) :
@@ -56,7 +56,7 @@ public:
     }
 };
 
-class AllBinaryCombinationsNode : Node {
+class AllBinaryCombinationsNode : public Node {
 public:
     AllBinaryCombinationsNode(std::vector<size_t> leaves) : leaves(leaves) {
         assert(leaves.size() > 0);

@@ -70,3 +70,9 @@ public:
         return false;
     }
 };
+
+typedef std::shared_ptr<Node> NodePtr;
+typedef std::shared_ptr<Leaf> LeafPtr;
+typedef std::shared_ptr<InnerNode> InnerNodePtr;
+typedef std::shared_ptr<UnrootedNode> UnrootedNodePtr;
+typedef std::shared_ptr<AllBinaryCombinationsNode> AllBinaryCombinationsNodePtr;

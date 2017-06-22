@@ -1,5 +1,12 @@
 #include "leaf_set.h"
 
+
+BitLeafSet::BitLeafSet(size_t amount_of_leaves) {
+    this.set = new boost::dynamic_bitset<>(amount_of_leaves);
+    // all leaves are in the set -> all set to true
+    set.set();
+}
+    
 std::vector<BitLeafSet> BitLeafSet::apply_constraints(
         const std::vector<constraint> &constraints) const {
     std::vector<LeafSet> new_sets;
@@ -37,7 +44,7 @@ std::vector<BitLeafSet> BitLeafSet::apply_constraints(
                 }
             }
             if(!existed) {// constraint needs a new set
-                new_sets.emplace_back();
+                new_sets.emplace_back(this.set.size());
                 // no set exists yet, create new one
                 new_sets.back().set[smaller_left] = true;
                 new_sets.back().set[smaller_right] = true;
@@ -54,7 +61,7 @@ bool BitLeafSet::contains(const size_t leaf) const {
     return set.test(leaf);
 }
 
-std::tuple<BitLeafSet, BitLeafSet> BitLeafSet::get_nth_partition_tuple(
+std::tuple<LeafSet, LeafSet> BitLeafSet::get_nth_partition_tuple(
             const std::vector<LeafSet> &partitions, const size_t n) const {
     
     //TODO asserts

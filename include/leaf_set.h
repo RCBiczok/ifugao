@@ -8,6 +8,7 @@
 
 class LeafSet {
 public:
+    //TODO deleted constructor
     virtual std::vector<LeafSet> apply_constraints(
             const std::vector<constraint> &constraints) const;
     virtual bool contains(const size_t leaf) const;
@@ -28,8 +29,9 @@ public:
     virtual std::vector<size_t> get_all_leaves() const;
 };
 
-class BitLeafSet : LeafSet {
+class BitLeafSet : public LeafSet {
 public:
+    BitLeafSet(size_t amount_of_leaves);
     std::vector<LeafSet> apply_constraints(
             const std::vector<constraint> &constraints) const;
     bool contains(const size_t leaf) const;

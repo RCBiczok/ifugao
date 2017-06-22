@@ -6,6 +6,7 @@
 
 #include "input_parser.h"
 #include "terraces.h"
+#include "types.h"
 #include "util.h"
 
 #include <assert.h>
@@ -29,53 +30,63 @@ int terraceAnalysis(missingData *m,
     mpz_set_ui(*terraceSize, 0);
 
     //some debugging print outs
-
     d_printf("read_tree = %s\n", newickTreeString);
 
-    // figure out what we are supposed to calculate
-
-    //TODO Unused variable: countTrees
+    // variables to figure out what we are supposed to calculate
+    //TODO Unused variables: countTrees, treeIsOnTerrace
     //const bool countTrees = (ta_outspec & TA_COUNT) != 0;
-    const bool enumerateTrees = (ta_outspec & TA_ENUMERATE) != 0;
-    //TODO Unused variable: treeIsOnTerrace
     //const bool treeIsOnTerrace = (ta_outspec & TA_DETECT) != 0;
+    const bool enumerateTrees = (ta_outspec & TA_ENUMERATE) != 0;
     const bool enumerateCompressedTrees = (ta_outspec & TA_ENUMERATE_COMPRESS)
                                           != 0;
 
-    /* some basic error checking, students, please extend this, see error codes at the end of this function */
-
-    assert(m->numberOfSpecies > 3 && m->numberOfPartitions > 1);
-
-    for (i = 0; i < m->numberOfSpecies; i++) {
-        for (j = 0; j < m->numberOfPartitions; j++) {
-            if (!(getDataMatrix(m, i, j) == static_cast<unsigned char>(0)
-                  || getDataMatrix(m, i, j) == static_cast<unsigned char>(1))) {
-                return TERRACE_MATRIX_ERROR;
+    {// some basic error checking
+        //TODO extend this, see error codes at the end of this function
+        if(m->numberOfSpecies < 4) {
+            return TERRACE_NOT_ENOUGH_SPECIES;
+        }
+        if(m->numberOfPartitions > 1) {
+            return TERRACE_NUM_PARTITIONS_ERROR;
+        }
+        for (i = 0; i < m->numberOfSpecies; i++) {
+            for (j = 0; j < m->numberOfPartitions; j++) {
+                if (!(getDataMatrix(m, i, j) == static_cast<unsigned char>(0)
+                      || getDataMatrix(m, i, j) == static_cast<unsigned char>(1))) {
+                    return TERRACE_MATRIX_ERROR;
+                }
             }
+        }
+
+        if ((enumerateTrees || enumerateCompressedTrees)
+            && allTreesOnTerrace == nullptr) {
+            return TERRACE_OUTPUT_FILE_ERROR;
         }
     }
 
-    if ((enumerateTrees || enumerateCompressedTrees)
-        && allTreesOnTerrace == nullptr) {
-        return TERRACE_OUTPUT_FILE_ERROR;
+    ntree_t *nwk_tree = get_newk_tree_from_string(newickTreeString);
+
+    assert(nwk_tree != nullptr);
+
+    size_t root_species_id;
+    //TODO bool return value, rtree as out parameter
+    Tree rtree = root_tree(nwk_tree, m, root_species_id);
+    // nwk_tree is no longer needed
+    ntree_destroy(nwk_tree);
+    
+    if(rtree == nullptr) {
+        return TERRACE_NO_SPECIES_WITH_FULL_SET;
     }
-
-    ntree_t *tree = get_newk_tree_from_string(newickTreeString);
-
-    assert(tree != nullptr);
-
-    size_t root_species_name;
-    std::shared_ptr<Tree> rtree = root_tree(tree, m, root_species_name);
-
-    assert(rtree != nullptr);
-
-    leaf_set leafs;
-    for (size_t k = 0; k < m->numberOfSpecies; k++) {
-        leafs.insert(leaf_number(m->speciesNames[k]));
-    }
-
-    size_t num_trees = list_trees(extract_constraints_from_supertree(rtree, m),
-                                  root_species_name, leafs, allTreesOnTerrace);
+    
+    // make the mapping of leaf IDs to their labels available static
+    Node::speciesNames = m->speciesNames;
+    
+    std::vector<constraint> constraints = 
+            extract_constraints_from_supertree(rtree, m);
+    
+    BitLeafSet leaf_set(m->numberOfSpecies);
+    
+    size_t num_trees = list_trees(constraints, root_species_id, leaf_set,
+                                  allTreesOnTerrace);
     mpz_set_ui(*terraceSize, num_trees);
 
     /* e.g., include an error check to make sure the Newick tree you have parsed contains as many species as indicated by numberOfSpecies */
@@ -98,8 +109,6 @@ int terraceAnalysis(missingData *m,
      -6: reserved for something you must think about anyway (tree can't be rooted)
      -7: no output file specified
      */
-
-    ntree_destroy(tree);
     return TERRACE_SUCCESS;
 }
 
@@ -202,7 +211,7 @@ unsigned char getDataMatrix(const missingData *m, size_t speciesNumber,
 }
 
 std::vector<constraint> extract_constraints_from_supertree(
-        const std::shared_ptr<Tree> supertree,
+        const Tree supertree,
         const missingData *missing_data) {
 
     std::map<std::string, unsigned char> species_map;
@@ -233,7 +242,6 @@ std::vector<constraint> extract_constraints_from_supertree(
 
     return result;
 }
-
 #ifndef DEBUG
 
 static void d_print_tree_rec(const ntree_t *tree, int depth) {
@@ -259,12 +267,13 @@ void d_print_tree_impl(const char* file, const int line, const ntree_t *tree) {
     fprintf(stderr, "DEBUG(%s, %d): Dump ntree_t:\n", file, line);
     d_print_tree_rec(tree, 1);
 }
+#endif /* DEBUG */
 
-static void d_print_tree_rec(const std::shared_ptr<Tree> tree, int depth) {
+/* TODO rewrite if still desired
+static void d_print_tree_rec(const Tree tree, int depth) {
     fprintf(stderr, "Label: %s\n", tree->label.c_str());
-    assert(
-            depth == 1
-            || (tree->parent != nullptr
+    assert(depth == 1
+           || (tree->parent != nullptr
                 && (tree->parent->left == tree
                     || tree->parent->right == tree)));
     if (tree->left != nullptr) {
@@ -283,9 +292,8 @@ static void d_print_tree_rec(const std::shared_ptr<Tree> tree, int depth) {
     }
 }
 
-void d_print_tree_impl(const char* file, const int line, const std::shared_ptr<Tree> tree) {
+void d_print_tree_impl(const char* file, const int line, const Tree tree) {
     fprintf(stderr, "DEBUG(%s, %d): Dump Tree:\n", file, line);
     d_print_tree_rec(tree, 1);
 }
-
-#endif /* DEBUG */
+*/

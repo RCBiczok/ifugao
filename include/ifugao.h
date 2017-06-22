@@ -17,7 +17,6 @@
  *        get_all_binary_trees
  *      apply_constraints
  *     
- *   d_print_tree
  * 
  */
 
@@ -33,7 +32,6 @@
 size_t list_trees(const std::vector<constraint> &constraints,
                   const size_t &root_id,
                   LeafSet &leaf_set,
-                  const std::vector<std::string> &leaf_to_label,
                   FILE *file);
 
 /** Combines all sets (constraints need to be applied already) */

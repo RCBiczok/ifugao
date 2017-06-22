@@ -2,8 +2,8 @@
 
 #include "types.h"
 #include "ifugao.h"
-
 #include "input_parser.h"
+
 #include <stdio.h>
 #include <stdbool.h>
 #include <gmp.h>
@@ -26,12 +26,13 @@
 
 #define TERRACE_SUCCESS                   0 
 #define TERRACE_NEWICK_ERROR             -1
-#define TERRACE_SPECIES_ERROR            -2 
+#define TERRACE_NOT_ENOUGH_SPECIES       -2 
 #define TERRACE_MATRIX_ERROR             -3 
 #define TERRACE_NUM_SPECIES_ERROR        -4 
 #define TERRACE_NUM_PARTITIONS_ERROR     -5
 #define TERRACE_THINK_ON_YOUR_OWN_ERROR  -6
 #define TERRACE_OUTPUT_FILE_ERROR        -7
+#define TERRACE_NO_SPECIES_WITH_FULL_SET -8
 /* to be extended */
 
 /* Argument to control output of terraceAnalysis function (ta_outspec) */
@@ -64,7 +65,6 @@
 #define TA_ENUMERATE_COMPRESS 8
 
 // data type containing data to be passed to the algorithm we want to implement 
-
 typedef struct {
     size_t numberOfSpecies;
     size_t numberOfPartitions;
@@ -145,7 +145,7 @@ void copyDataMatrix(const unsigned char *matrix, missingData *m);
  * @return All constraints of the given supertree.
  */
 std::vector<constraint> extract_constraints_from_supertree(
-        const std::shared_ptr<Tree> supertree, const missingData* missing_data);
+        const Tree supertree, const missingData* missing_data);
 
 /**
  * Function that tells us, given a tree, and a missing data matrix as well as its dimensions,
@@ -179,7 +179,9 @@ int terraceAnalysis(missingData *m, const char *newickTreeString,
  */
 #ifndef DEBUG
 void d_print_tree_impl(const char* file, const int line, const ntree_t* tree);
-void d_print_tree_impl(const char* file, const int line, const std::shared_ptr<Tree> tree);
+/* TODO reenable if desired, needs rewriting though
+void d_print_tree_impl(const char* file, const int line, const Tree tree);
+*/
 #define d_print_tree(t) do { \
    d_print_tree_impl(__FILE__, __LINE__, t);\
 } while(false)
@@ -191,4 +193,3 @@ void d_print_tree_impl(const char* file, const int line, const std::shared_ptr<T
 #define d_printf(...) do {} while(false)
 #define d_print_tree(tree) do {} while(false)
 #endif
-

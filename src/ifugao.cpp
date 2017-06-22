@@ -6,7 +6,6 @@
 size_t list_trees(const std::vector<constraint> &constraints,
                   const size_t &root_id,
                   LeafSet &leaf_set,
-                  const std::vector<std::string> &leaf_to_label,
                   FILE *file) {
     assert(leaf_set.contains(root_id));
     // remove root, so it is no longer in the tree
@@ -16,7 +15,7 @@ size_t list_trees(const std::vector<constraint> &constraints,
 
     if (file != nullptr) { // nullptr means just counting
         for (NodePtr t : all_trees) {
-            fprintf(file, "%s\n", t->to_newick_string(leaf_to_label).c_str());
+            fprintf(file, "%s\n", t->to_newick_string().c_str());
         }
     }
     return all_trees.size();

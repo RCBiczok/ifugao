@@ -31,5 +31,5 @@ std::vector<constraint> find_constraints(const LeafSet &leaves,
  * @return All constraints of the given super tree.
  */
 std::vector<constraint> extract_constraints_from_tree(
-        const std::shared_ptr<Tree> supertree);
+        const Tree supertree);
 

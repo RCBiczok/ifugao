@@ -46,6 +46,7 @@ int terraceAnalysis(missingData *m,
             return TERRACE_NOT_ENOUGH_SPECIES;
         }
         if(m->numberOfPartitions > 1) {
+        
             return TERRACE_NUM_PARTITIONS_ERROR;
         }
         for (i = 0; i < m->numberOfSpecies; i++) {
@@ -213,19 +214,14 @@ unsigned char getDataMatrix(const missingData *m, size_t speciesNumber,
 std::vector<constraint> extract_constraints_from_supertree(
         const Tree supertree,
         const missingData *missing_data) {
-
-    std::map<std::string, unsigned char> species_map;
-    for (unsigned char i = 0; i < missing_data->numberOfSpecies; i++) {
-        species_map[std::string(missing_data->speciesNames[i])] = i;
-    }
+    // map all found constraints, so there will be no duplicates
     typedef std::tuple<size_t, size_t, size_t, size_t> constraint_key;
     std::map<constraint_key, constraint> constraint_map;
-
+    
     for (size_t i = 0; i < missing_data->numberOfPartitions; i++) {
-        auto partition = generate_induced_tree(supertree, missing_data,
-                                               species_map, i);
-        
-        for (auto &c : extract_constraints_from_tree(partition)) {
+        auto partition_tree = generate_induced_tree(supertree, missing_data, i);
+        auto constraints = extract_constraints_from_tree(partition_tree);
+        for (auto &c : constraints) {
             //avoid duplications
             constraint_key key(c.smaller_left, c.smaller_right, c.bigger_left,
                                c.bigger_right);
@@ -234,7 +230,8 @@ std::vector<constraint> extract_constraints_from_supertree(
             }
         }
     }
-
+    
+    // TODO faster method?
     std::vector<constraint> result;
     for (auto &e : constraint_map) {
         result.push_back(e.second);

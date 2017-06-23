@@ -21,9 +21,10 @@
  * column of the missing data matrix
  * @return the subtree T|G_i.
  */
-Tree generate_induced_tree(const Tree tree,
+Tree generate_induced_tree(
+        const Tree tree,
         const missingData *missing_data,
-        std::map<std::string, unsigned char>& first, size_t partition);
+        size_t partition);
 
 /**
  * This function roots the tree at an appropriate position according to the missing data array
@@ -55,8 +56,7 @@ Tree root_at(ntree_t *root);
  * @param current_ntree the ntree_t coresponding to the current parameter. Here we get the children from
  * @param parent the ntree_t represention of the parent. this is needed to avoid calling the recursion on the parent
  */
-void recursive_root(Tree current, ntree_t *current_ntree,
-        ntree_t *parent);
+void root_recursive(ntree_t *current_ntree, ntree_t *parent);
 
 /**
  * @brief check_tree do a dfs on the tree and check, if the childs parent is the current node.

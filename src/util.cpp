@@ -13,25 +13,25 @@ Tree generate_induced_tree(const Tree tree,
             && getDataMatrix(missing_data, species_map[tree->label],
                              partition)) {
             Tree leave = std::make_shared<Node>(*tree);
-            leave->left = nullptr;
-            leave->right = nullptr;
+            leave->children[0] = nullptr;
+            leave->children[1] = nullptr;
             leave->parent = nullptr;
             return tree;
         }
     } else {
         // Inner node case
-        assert(tree->left != nullptr);
-        auto left = generate_induced_tree(tree->left, missing_data, partition);
-        assert(tree->right != nullptr);
-        auto right = generate_induced_tree(tree->right, missing_data,
+        assert(tree->children[0] != nullptr);
+        auto left = generate_induced_tree(tree->children[0], missing_data, partition);
+        assert(tree->children[1] != nullptr);
+        auto right = generate_induced_tree(tree->children[1], missing_data,
                                            partition);
         //Left and right subtrees are included -> common ancestor is included
         if (left != nullptr && right != nullptr) {
             auto inner_node = std::make_shared<Node>(*tree);
             left->parent = inner_node;
             right->parent = inner_node;
-            inner_node->left = left;
-            inner_node->right = right;
+            inner_node->children[0] = left;
+            inner_node->children[1] = right;
             return inner_node;
         } else if (left != nullptr) {
             return left;
@@ -130,13 +130,14 @@ Tree root_recursive(ntree_t *current_ntree, ntree_t *parent) {
         // TODO where to get the ID from?
         return std::make_shared<Leaf>(0);
     } else if(current_ntree->children_count == 2) {
-        assert(current_ntree->left!=nullptr && current_ntree->right!=nullptr);
+        assert(current_ntree->children[0]!=nullptr);
+        assert(current_ntree->children[1]!=nullptr);
         if(current_ntree->parent == nullptr) {
-            // old root of a rooted tree
-            if(parent == current_ntree->left) {
-                return root_recursive (current_ntree->right, parent);
-            } else if(parent == current_ntree->right) {
-                return root_recursive (current_ntree->left, parent);
+            // root of a rooted tree
+            if(parent == current_ntree->children[0]) {
+                return root_recursive (current_ntree->children[1], parent);
+            } else if(parent == current_ntree->children[1]) {
+                return root_recursive (current_ntree->children[0], parent);
             } else {
                 assert(false);
             }
@@ -144,19 +145,19 @@ Tree root_recursive(ntree_t *current_ntree, ntree_t *parent) {
             ntree_t *left; 
             ntree_t *right; 
             if(parent == current_ntree->parent) {
-                left = current_ntree->left;
-                right = current_ntree->right;
-            } else if(parent == current_ntree->left) {
-                left = current_ntree->right;
+                left = current_ntree->children[0];
+                right = current_ntree->children[1];
+            } else if(parent == current_ntree->children[0]) {
+                left = current_ntree->children[1];
                 right = current_ntree->parent;
-            } else if(parent == current_ntree->right) {
+            } else if(parent == current_ntree->children[1]) {
                 left = current_ntree->parent;
-                right = current_ntree->left;
+                right = current_ntree->children[0];
             } else {
                 assert(false);
             }
             auto left_tree = root_recursive(left, current_ntree);
-            auto right_right = root_recursive(right, current_ntree);
+            auto right_tree = root_recursive(right, current_ntree);
             
             return std::make_shared<InnerNode>(left_tree, right_tree);
         }

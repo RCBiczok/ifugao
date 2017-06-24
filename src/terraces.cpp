@@ -68,8 +68,8 @@ int terraceAnalysis(missingData *m,
     // mapping of leaf IDs to their labels (availably static)
     Node::speciesNames = m->speciesNames;
     // mapping of labels to leaf IDs
-    for (size_t i = 0; i < missing_data->numberOfSpecies; i++) {
-        Node::label_to_id[std::string(missing_data->speciesNames[i])] = i;
+    for (size_t i = 0; i < m->numberOfSpecies; i++) {
+        Node::label_to_id[m->speciesNames[i]] = i;
     }
     
     ntree_t *nwk_tree = get_newk_tree_from_string(newickTreeString);
@@ -85,7 +85,7 @@ int terraceAnalysis(missingData *m,
     ntree_destroy(nwk_tree);
     
     std::vector<constraint> constraints = 
-            extract_constraints_from_supertree(rtree, label_to_id m);
+            extract_constraints_from_supertree(rtree, m);
     
     BitLeafSet leaf_set(m->numberOfSpecies);
     

@@ -1,45 +1,40 @@
 #include "util.h"
 
-std::shared_ptr<Tree> generate_induced_tree(const std::shared_ptr<Tree> tree,
-                                            const missingData *missing_data,
-                                            std::map<std::string, unsigned char> &species_map, size_t partition) {
-    if (tree == nullptr) {
-        return nullptr;
-    }
-
-    if (tree->is_leaf()) {
-        // Leave case
-        if (species_map.count(tree->label) == 1
-            && getDataMatrix(missing_data, species_map[tree->label],
-                             partition)) {
-            auto leave = std::make_shared<Tree>(*tree);
-            leave->left = nullptr;
-            leave->right = nullptr;
-            leave->parent = nullptr;
-            return tree;
+Tree generate_induced_tree(const Tree node,
+                           const missingData *missing_data,
+                           size_t partition) {
+    // TODO what does this method do actually and how can it achieve it easier
+    assert(node != nullptr);
+    
+    if (node->is_leaf()) {
+        // Leaf case
+        const size_t leaf_id = const dynamic_cast<LeafPtr>(node).leaf_id;
+        const char* label = Node::get_label_for_leaf(leaf_id);
+        if (true //TODO why is this here?: species_map.count(label) == 1
+            && getDataMatrix(missing_data, leaf_id, partition)) {
+            return std::make_shared<Leaf>(leaf_id);
         }
     } else {
         // Inner node case
-        assert(tree->left != nullptr);
-        auto left = generate_induced_tree(tree->left, missing_data, species_map,
-                                          partition);
-        assert(tree->right != nullptr);
-        auto right = generate_induced_tree(tree->right, missing_data,
-                                           species_map, partition);
+        //TODO dynamic_cast to either InnerNode or UnrootedNode
+        /*auto left = generate_induced_tree(node->children[0], missing_data, partition);
+        auto right = generate_induced_tree(node->children[1], missing_data,
+                                           partition);
         //Left and right subtrees are included -> common ancestor is included
         if (left != nullptr && right != nullptr) {
-            auto inner_node = std::make_shared<Tree>(*tree);
+            auto inner_node = std::make_shared<Node>(*node);
             left->parent = inner_node;
             right->parent = inner_node;
-            inner_node->left = left;
-            inner_node->right = right;
+            inner_node->children[0] = left;
+            inner_node->children[1] = right;
             return inner_node;
         } else if (left != nullptr) {
             return left;
         } else if (right != nullptr) {
             return right;
-        }
+        }*/
     }
+    
     return nullptr;
 }
 
@@ -57,22 +52,23 @@ std::shared_ptr<Tree> root_tree(ntree_t *tree,
             }
         }
         if (contains_all_data) {
-            root_specied_found = true;
-            root_species_number = i;
+            root_species_found = true;
+            root_species_id = i;
             break;
         }
     }
-    if (root_specied_found) {
-        ntree_t *future_root = get_leaf_by_name(tree,
-                                                missing_data->speciesNames[root_species_number]);
-        root_species_name = missing_data->speciesNames[root_species_number];
+    if (root_species_found) {
+        ntree_t *future_root =
+                get_leaf_by_name(nwk_tree,
+                               missing_data->speciesNames[root_species_id]);
         if (future_root == nullptr) {
             std::cout << "In root_tree(...): label "
-                      << missing_data->speciesNames[root_species_number]
+                      << missing_data->speciesNames[root_species_id]
                       << " not found in tree" << std::endl;
             return nullptr;
+        } else {
+            return root_at(future_root);
         }
-        return root_at(future_root);
     } else {
         //tree cannot be rooted consistently
         return nullptr;
@@ -107,104 +103,73 @@ ntree_t *get_leaf_by_name(ntree_t *tree, const char *label) {
     return nullptr; //label not found
 }
 
-std::shared_ptr<Tree> root_at(ntree_t *leaf) {
+Tree root_at(ntree_t *leaf) {
     //if leaf->parent is null, leaf is the root => the tree is not binary, or the node is no leaf
     assert(leaf != nullptr);
     assert(leaf->parent != nullptr);
     assert(leaf->children_count == 0);  //should be a leaf
-    ntree_t *neighbour = leaf->parent;
-    std::shared_ptr<Tree> root = std::make_shared<Tree>();
-    std::shared_ptr<Tree> new_leaf = std::make_shared<Tree>();
-    std::shared_ptr<Tree> new_neighbour = std::make_shared<Tree>();
-
-    //initialize root
-    root->label = "";
-    root->left = new_leaf;
-    root->right = new_neighbour;
-    root->label = "";
-
-    //initialize new_leaf and new_neighbour
-    new_leaf->parent = root;
-    new_neighbour->parent = root;
-
-    recursive_root(new_leaf, leaf, neighbour);
-    recursive_root(new_neighbour, neighbour, leaf);
-    return root;
+    
+    return root_recursive(leaf->parent, leaf);
 }
 
-void recursive_root(std::shared_ptr<Tree> current, ntree_t *current_ntree,
-                    ntree_t *parent) {
-
-    assert(current != nullptr);
+Tree root_recursive(ntree_t *current_ntree, ntree_t *parent) {
     assert(current_ntree != nullptr);
-
-    //when the children_count is 3, we are at the pseudoroot of the unrooted binary tree
-    assert(current_ntree->children_count == 2
-           || current_ntree->children_count == 0
+    assert(parent != nullptr);
+    //when the children_count is 3, we are at the pseudoroot of the unrooted
+    // binary tree, so there is no parent node
+    assert(current_ntree->children_count == 0
+           || current_ntree->children_count == 2
            || (current_ntree->children_count == 3
                && current_ntree->parent == nullptr));
-
-    if (current_ntree->label == nullptr) {
-        current->label = "";
-    } else {
-        current->label = current_ntree->label;
-    }
-
-    if (current_ntree->children_count == 0) {   //is leaf
-        return;
-    }
-
-    current->left = std::make_shared<Tree>();
-    current->left->parent = current;
-    current->right = std::make_shared<Tree>();
-    current->right->parent = current;
-
-    ntree_t *left_ntree;
-    ntree_t *right_ntree;
-
-    if (current_ntree->children_count == 3) {   //we are at the pseudoroot
-        //set the children, leave out the parent
-        if (current_ntree->children[0] == parent) {
-            left_ntree = current_ntree->children[1];
-            right_ntree = current_ntree->children[2];
-        } else if (current_ntree->children[1] == parent) {
-            left_ntree = current_ntree->children[0];
-            right_ntree = current_ntree->children[2];
-        } else if (current_ntree->children[2] == parent) {
-            left_ntree = current_ntree->children[0];
-            right_ntree = current_ntree->children[1];
+               
+    if(current_ntree->children_count == 0) {
+        size_t leaf_id = Node::get_leaf_from_label(current_ntree->label);
+        return std::make_shared<Leaf>(leaf_id);
+    } else if(current_ntree->children_count == 2) {
+        assert(current_ntree->children[0] != nullptr);
+        assert(current_ntree->children[1] != nullptr);
+        if(current_ntree->parent == nullptr) {
+            // root of a rooted tree
+            if(parent == current_ntree->children[0]) {
+                return root_recursive (current_ntree->children[1], parent);
+            } else if(parent == current_ntree->children[1]) {
+                return root_recursive (current_ntree->children[0], parent);
+            } else {
+                assert(false);
+            }
         } else {
-            assert(0);
+            ntree_t *left; 
+            ntree_t *right; 
+            if(parent == current_ntree->parent) {
+                left = current_ntree->children[0];
+                right = current_ntree->children[1];
+            } else if(parent == current_ntree->children[0]) {
+                left = current_ntree->children[1];
+                right = current_ntree->parent;
+            } else if(parent == current_ntree->children[1]) {
+                left = current_ntree->parent;
+                right = current_ntree->children[0];
+            } else {
+                assert(false);
+            }
+            auto left_tree = root_recursive(left, current_ntree);
+            auto right_tree = root_recursive(right, current_ntree);
+            
+            return std::make_shared<InnerNode>(left_tree, right_tree);
         }
-    } else if(current_ntree->parent == nullptr) { //we are at the regular root
-        if(current_ntree->children[0]->label != nullptr) {
-            current->label = current_ntree->children[0]->label;
-        }
-        if(current_ntree->children[1]->label != nullptr) {
-            current->label = current_ntree->children[1]->label;
-        }
-        current->left = nullptr;
-        current->right = nullptr;
-        return;
-    } else {
-        assert(current_ntree->children_count == 2);
-        //set the children, leave out the parent
-        if (current_ntree->children[0] == parent) {
-            left_ntree = current_ntree->children[1];
-            right_ntree = current_ntree->parent;
-        } else if (current_ntree->children[1] == parent) {
-            left_ntree = current_ntree->children[0];
-            right_ntree = current_ntree->parent;
-        } else if (current_ntree->parent == parent) {
-            left_ntree = current_ntree->children[0];
-            right_ntree = current_ntree->children[1];
-        } else {
-            assert(0);
-        }
+        
+    } else if(current_ntree->children_count == 3) {
+        assert(current_ntree->parent == nullptr); // root may not have parent
+        
+        auto tree1 = root_recursive(current_ntree->children[0], current_ntree);
+        auto tree2 = root_recursive(current_ntree->children[1], current_ntree);
+        auto tree3 = root_recursive(current_ntree->children[2], current_ntree);
+        
+        return std::make_shared<UnrootedNode>(tree1, tree2, tree3);
     }
-
-    recursive_root(current->left, left_ntree, current_ntree);
-    recursive_root(current->right, right_ntree, current_ntree);
+    
+    assert(false);
+    return nullptr;
 }
 
 bool check_tree(ntree_t *tree) {

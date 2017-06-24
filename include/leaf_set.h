@@ -2,7 +2,6 @@
 
 #include <boost/dynamic_bitset.hpp>
 #include <tuple>
-#include <vector>
 
 struct constraint;
 

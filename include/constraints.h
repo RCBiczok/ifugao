@@ -1,3 +1,4 @@
+/*** DO NOT INCLUDE DIRECTLY, INCLUDE types.h INSTEAD ***/
 #pragma once
 #include "leaf_set.h"
 #include "types.h"
@@ -11,6 +12,8 @@ struct constraint {
     leaf_number smaller_right;
     leaf_number bigger_right;
 };
+
+#include "leaf_set.h"
 
 /**
  * Returns a vector containing all constraints that still are valid for the given set of leaves.
@@ -29,5 +32,5 @@ std::vector<constraint> find_constraints(const LeafSet &leaves,
  * @return All constraints of the given super tree.
  */
 std::vector<constraint> extract_constraints_from_tree(
-        const std::shared_ptr<Tree> supertree);
+        const Tree supertree);
 

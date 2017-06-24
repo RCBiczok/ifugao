@@ -94,14 +94,15 @@ char *read_newk_tree(const char *newk_file) {
     return string;
 }
 
-
 ntree_t *get_newk_tree(const char *nwk_file) {
+    //  ntree_parse_newick_from_string is a call to extern library newick-tools
     ntree_t *tree = ntree_parse_newick(nwk_file);
     fix_tree(tree); //necessary since tree seems to be corrupt
     return tree;
 }
 
 ntree_t *get_newk_tree_from_string(const char *nwk_string) {
+    //  ntree_parse_newick_from_string is a call to extern library newick-tools
     ntree_t *tree = ntree_parse_newick_from_string(nwk_string);
     fix_tree(tree); //necessary since tree seems to be corrupt
     return tree;

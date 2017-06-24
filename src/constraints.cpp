@@ -36,16 +36,9 @@ std::vector<constraint> find_constraints(const LeafSet &leaves,
 
 
 static std::tuple<size_t, size_t> extract_constraints_from_tree_rec(
-        const std::shared_ptr<Tree> node,
-        std::vector<constraint> &constraints) {
+        const InnerNodePtr node, std::vector<constraint> &constraints) {
     //TODO adopt to new tree structure
     assert(node != nullptr);
-
-    if (node->is_leaf()) {
-        auto this_leaf = node->label;
-        return std::make_tuple(this_leaf, this_leaf);
-    }
-
     // (l,r) of the left child node
     size_t l_left_most;
     size_t l_right_most;
@@ -77,4 +70,12 @@ static std::tuple<size_t, size_t> extract_constraints_from_tree_rec(
     }
 
     return std::make_tuple(l_left_most, r_right_most);
+}
+
+static std::tuple<size_t, size_t> extract_constraints_from_tree_rec(
+        const LeafPtr node, std::vector<constraint> &constraints) {
+    assert(node != nullptr);
+    
+    size_t leaf = node.leaf_id;
+    return std::make_tuple(leaf, leaf);
 }

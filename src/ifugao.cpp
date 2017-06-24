@@ -6,13 +6,13 @@
 
 size_t list_trees(const std::vector<constraint> &constraints,
                   const size_t &root_id,
-                  const LeafSet &leaf_set,
-                  const std::vector<std::string> &leaf_to_label,
+                  LeafSet &leaf_set,
                   FILE *file) {
-    /*//unroot tree
+    assert(leaf_set.contains(root_id));
+    // remove root, so it is no longer in the tree
     leaf_set.remove_leaf(root_id);
-    auto subtrees = find_all_rooted_trees(leaf_set, constraints);*/
-    auto all_trees = find_all_unrooted_trees(leaf_set, constraints, root_id);
+    
+    auto all_trees = find_all_trees(leaf_set, constraints, true, root_id);
 
     if (file != nullptr) { // nullptr means just counting
         for (const std::shared_ptr<Tree> t : all_trees) {
@@ -22,26 +22,35 @@ size_t list_trees(const std::vector<constraint> &constraints,
     return all_trees.size();
 }
 
-std::vector<std::shared_ptr<Tree>> find_all_unrooted_trees(
-        const LeafSet &leaf_set, const std::vector<constraint> &constraints,
-        const size_t &root_id) {
-    //TODO assert(leaf_set.count(root_id) > 0);
-
-    LeafSet part_left;
-    LeafSet part_right;
+std::vector<NodePtr> find_all_trees(
+        const LeafSet &leaf_set,
+        const std::vector<constraint> &constraints,
+        const bool unrooted /* = false*/,
+        const size_t root_id /* = 0*/) {
+    std::vector<NodePtr> result;
     
     // TODO abstract into leaf_set.h
     //part_left.set.set(root_id);
     //part_right = part_left.get_complementing_leaf_set_to_base(leaf_set);
     
-    auto constraints_left = find_constraints(part_left, constraints);
-    auto constraints_right = find_constraints(part_right, constraints);
-    
-    auto subtrees_left = find_all_rooted_trees(part_left, constraints_left);
-    auto subtrees_right = find_all_rooted_trees(part_right, constraints_right);
-    
-    return merge_subtrees(subtrees_left, subtrees_right);
-}
+    if(size==1) {
+        auto leaves = leaf_set.get_all_leaves();
+        NodePtr leaf = std::make_shared<Leaf>(leaves[0]);
+        result.push_back(leaf);
+    } else if(size==2) {
+        auto leaves = leaf_set.get_all_leaves();
+        NodePtr leaf1 = std::make_shared<Leaf>(leaves[0]);
+        NodePtr leaf2 = std::make_shared<Leaf>(leaves[1]);
+        NodePtr node = std::make_shared<InnerNode>(leaf1, leaf2);
+        result.push_back(node);
+    } else if (constraints.empty()) {
+        // no more constraints, create a Node for all possible combinations
+        auto leaves = leaf_set.get_all_leaves();
+        NodePtr tree = std::make_shared<AllBinaryCombinationsNode>(leaves);
+        result.push_back(tree);
+    } else {
+        std::vector<LeafSet> partitions = leaf_set.apply_constraints(constraints);
+        size_t limit = number_partition_tuples(partitions);
 
 //static std::vector<std::shared_ptr<Tree> > add_leaf_to_tree(
 //        std::shared_ptr<Node> current_node, const size_t leaf) {

@@ -6,10 +6,7 @@
 #include <assert.h>
 #include <iostream>
 
-#include "constraints.h"
-#include "leaf_set.h"
-#include "tree.h"
-
+#include "types.h"
 
 /**
  * Method calling overview:
@@ -20,7 +17,6 @@
  *        get_all_binary_trees
  *      apply_constraints
  *     
- *   d_print_tree
  * 
  */
 
@@ -28,22 +24,22 @@
  * Calculates the number of trees on the terrace.
  *
  * @param constraints All constraints to fulfill.
- * @param leaves All leaves of the tree.
+ * @param leaf_set All leaves of the tree.
  * @param root_species_name the root species
  * @param file File to write all trees in newick format into, iff file != nullptr.
  * @return Number of all trees on the terrace.
  */
 size_t list_trees(const std::vector<constraint> &constraints,
                   const size_t &root_id,
-                  const LeafSet &leaves,
-                  const std::vector<std::string> &leaf_to_label,
+                  LeafSet &leaf_set,
                   FILE *file);
 
-//TODO doc
 /** Combines all sets (constraints need to be applied already) */
-std::vector<std::shared_ptr<Tree> > find_all_unrooted_trees(
-        const LeafSet &leaves, const std::vector<constraint> &constraints,
-        const size_t &root_id);
+std::vector<NodePtr> find_all_trees(
+        const LeafSet &leaf_set,
+        const std::vector<constraint> &constraints,
+        const bool unrooted = false,
+        const size_t root_id = 0);
 
 
 /** Combines all sets (constraints need to be applied already) */
@@ -58,6 +54,11 @@ std::vector<std::shared_ptr<Node> > get_all_binary_trees(const LeafSet &leaves);
 std::vector<std::shared_ptr<Tree> > merge_subtrees(
         std::vector<std::shared_ptr<Node> > &left,
         std::vector<std::shared_ptr<Node> > &right);
+
+std::vector<NodePtr> merge_unrooted_subtrees(
+        const std::vector<NodePtr> &left,
+        const std::vector<NodePtr> &right,
+        const size_t root_id);
 
 /** write the given tree to the gien file */
 void write_tree(Tree &tree, FILE &file);
@@ -80,7 +81,7 @@ inline bool is_bit_set(size_t num, size_t n) {
  * @return the number of partition tuples that can be formed from the given list
  */
 inline size_t number_partition_tuples(
-        std::vector<std::shared_ptr<LeafSet> > &partitions) {
+        const std::vector<LeafSet> &partitions) {
     assert(partitions.size() > 1);
 
     return (1 << (partitions.size() - 1)) - 1;

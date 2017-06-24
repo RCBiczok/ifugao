@@ -16,7 +16,7 @@ public:
     static char* get_label_for_leaf(const size_t leaf);
     static size_t get_leaf_from_label(const char* label);
 
-    static std::map<char*, size_t> label_to_id;
+    static std::map<const char*, size_t> label_to_id;
     static char **speciesNames;
 };
 

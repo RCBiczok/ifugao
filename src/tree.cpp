@@ -11,7 +11,7 @@ char* get_label_for_leaf(const size_t leaf) {
 size_t get_leaf_from_label(const char* label) {
     assert(Node::label_to_id.count(label) == 1);
     
-    return label_to_id[label];
+    return Node::label_to_id[label];
 }
 
 

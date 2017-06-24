@@ -10,6 +10,7 @@
 #include "util.h"
 
 #include <assert.h>
+#include <map>
 #include <math.h>
 #include <time.h>
 #include <stdlib.h>
@@ -64,25 +65,27 @@ int terraceAnalysis(missingData *m,
         }
     }
 
+    // mapping of leaf IDs to their labels (availably static)
+    Node::speciesNames = m->speciesNames;
+    // mapping of labels to leaf IDs
+    for (size_t i = 0; i < missing_data->numberOfSpecies; i++) {
+        Node::label_to_id[std::string(missing_data->speciesNames[i])] = i;
+    }
+    
     ntree_t *nwk_tree = get_newk_tree_from_string(newickTreeString);
-
     assert(nwk_tree != nullptr);
 
     size_t root_species_id;
     //TODO bool return value, rtree as out parameter
     Tree rtree = root_tree(nwk_tree, m, root_species_id);
-    // nwk_tree is no longer needed
-    ntree_destroy(nwk_tree);
-    
     if(rtree == nullptr) {
         return TERRACE_NO_SPECIES_WITH_FULL_SET;
     }
-    
-    // make the mapping of leaf IDs to their labels available static
-    Node::speciesNames = m->speciesNames;
+    // nwk_tree is no longer needed
+    ntree_destroy(nwk_tree);
     
     std::vector<constraint> constraints = 
-            extract_constraints_from_supertree(rtree, m);
+            extract_constraints_from_supertree(rtree, label_to_id m);
     
     BitLeafSet leaf_set(m->numberOfSpecies);
     
@@ -132,7 +135,7 @@ missingData *initializeMissingData(size_t numberOfSpecies,
         m->speciesNames = const_cast<char **>(speciesNames);
         m->allocatedNameArray = 0;
     }
-        //otherwise, we assume that species names are just indexes
+    //otherwise, we assume that species names are just indexes
     else {
         m->allocatedNameArray = 1;
         m->speciesNames = new char*[numberOfSpecies];
@@ -218,9 +221,10 @@ std::vector<constraint> extract_constraints_from_supertree(
     typedef std::tuple<size_t, size_t, size_t, size_t> constraint_key;
     std::map<constraint_key, constraint> constraint_map;
     
+    // foreach partition
     for (size_t i = 0; i < missing_data->numberOfPartitions; i++) {
-        auto partition_tree = generate_induced_tree(supertree, missing_data, i);
-        auto constraints = extract_constraints_from_tree(partition_tree);
+        auto tree = generate_induced_tree(supertree, missing_data, i);
+        auto constraints = extract_constraints_from_tree(tree);
         for (auto &c : constraints) {
             //avoid duplications
             constraint_key key(c.smaller_left, c.smaller_right, c.bigger_left,

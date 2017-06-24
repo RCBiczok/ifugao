@@ -14,11 +14,12 @@
 #include <vector>
 
 /**
- * This funktion generates the trees T|G_i, which is exactly the subtree of T induced by partition G_i
+ * This function generates the trees T|G_i, which is exactly the subtree of T 
+ * induced by partition G_i
  * @param tree the rooted binary supertree
  * @param missing_data the data matrix representing the missing partition data.
- * @param partition the index i used to extract the subtree T|G_i. In other words, it is the i-th
- * column of the missing data matrix
+ * @param partition the index i used to extract the subtree T|G_i. In other
+ * words, it is the i-th column of the missing data matrix.
  * @return the subtree T|G_i.
  */
 Tree generate_induced_tree(
@@ -56,7 +57,7 @@ Tree root_at(ntree_t *root);
  * @param current_ntree the ntree_t coresponding to the current parameter. Here we get the children from
  * @param parent the ntree_t represention of the parent. this is needed to avoid calling the recursion on the parent
  */
-void root_recursive(ntree_t *current_ntree, ntree_t *parent);
+Tree root_recursive(ntree_t *current_ntree, ntree_t *parent);
 
 /**
  * @brief check_tree do a dfs on the tree and check, if the childs parent is the current node.

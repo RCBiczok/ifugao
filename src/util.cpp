@@ -44,7 +44,7 @@ std::shared_ptr<Tree> generate_induced_tree(const std::shared_ptr<Tree> tree,
 }
 
 std::shared_ptr<Tree> root_tree(ntree_t *tree,
-                                const missingData *missing_data, std::string &root_species_name) {
+                                const missingData *missing_data, leaf_number &root_species_name) {
     assert(tree != nullptr);
     size_t root_species_number = 0;
     bool root_specied_found = false;

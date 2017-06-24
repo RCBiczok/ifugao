@@ -47,17 +47,17 @@ std::vector<std::shared_ptr<Tree> > find_all_unrooted_trees(
 
 
 /** Combines all sets (constraints need to be applied already) */
-std::vector<std::shared_ptr<Tree> > find_all_rooted_trees(
+std::vector<std::shared_ptr<Node> > find_all_rooted_trees(
         const LeafSet &leaves,
         const std::vector<constraint> &constraints);
 
 
-std::vector<std::shared_ptr<Tree> > get_all_binary_trees(const LeafSet &leaves);
+std::vector<std::shared_ptr<Node> > get_all_binary_trees(const LeafSet &leaves);
 
 /** merges two sub-trees */
 std::vector<std::shared_ptr<Tree> > merge_subtrees(
-        std::vector<std::shared_ptr<Tree> > &left,
-        std::vector<std::shared_ptr<Tree> > &right);
+        std::vector<std::shared_ptr<Node> > &left,
+        std::vector<std::shared_ptr<Node> > &right);
 
 /** write the given tree to the gien file */
 void write_tree(Tree &tree, FILE &file);

@@ -5,11 +5,11 @@
 #include <memory>
 #include <map>
 
-std::string Leaf::to_newick_string(std::vector<std::string> &leaf_to_label) {
+std::string Leaf::to_newick_string(const std::vector<std::string> &leaf_to_label) {
     return leaf_to_label[this.leaf_id];
 }
 
-std::string Node::to_newick_string(std::vector<std::string> &leaf_to_label) {
+std::string Node::to_newick_string(const std::vector<std::string> &leaf_to_label) {
     std::stringstream ss;
     ss << "(";
     ss << this.left.to_newick_string(leaf_to_label);
@@ -19,7 +19,7 @@ std::string Node::to_newick_string(std::vector<std::string> &leaf_to_label) {
     return ss.str();
 }
 
-std::string UnrootedNode::to_newick_string(std::vector<std::string> &leaf_to_label) {
+std::string UnrootedNode::to_newick_string(const std::vector<std::string> &leaf_to_label) {
     std::stringstream ss;
     ss << "(";
     ss << this.elem1.to_newick_string(leaf_to_label);

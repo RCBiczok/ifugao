@@ -1,12 +1,15 @@
 #pragma once
 #include "leaf_set.h"
+#include "types.h"
+#include "tree.h"
+
 
 //lca(smaller_left, smaller_right) < lca(bigger_left, bigger_right)
 struct constraint {
-    leaf smaller_left;
-    leaf bigger_left;
-    leaf smaller_right;
-    leaf bigger_right;
+    leaf_number smaller_left;
+    leaf_number bigger_left;
+    leaf_number smaller_right;
+    leaf_number bigger_right;
 };
 
 /**

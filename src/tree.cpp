@@ -8,6 +8,13 @@ char* get_label_for_leaf(const size_t leaf) {
     return Node::speciesNames[leaf];
 }
 
+size_t get_leaf_from_label(const char* label) {
+    assert(Node::label_to_id.count(label) == 1);
+    
+    return label_to_id[label];
+}
+
+
 std::string Leaf::to_newick_string() {
     return Node::get_label_for_leaf(this->leaf_id);
 }

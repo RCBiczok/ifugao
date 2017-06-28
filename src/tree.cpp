@@ -1,22 +1,12 @@
 #include "tree.h"
 
+#include <assert.h>
 #include <sstream>
 
-char* get_label_for_leaf(const size_t leaf) {
-    assert(Node::speciesNames != nullptr);
-    
-    return Node::speciesNames[leaf];
-}
-
-size_t get_leaf_from_label(const char* label) {
-    assert(Node::label_to_id.count(label) == 1);
-    
-    return Node::label_to_id[label];
-}
-
+#include "leaf_label_mapper.h"
 
 std::string Leaf::to_newick_string() {
-    return Node::get_label_for_leaf(this->leaf_id);
+    return LeafLabelMapper::get_label_from_leaf_id(this->leaf_id);
 }
 
 std::string InnerNode::to_newick_string() {
@@ -46,9 +36,10 @@ std::string AllBinaryCombinationsNode::to_newick_string() {
     
     std::stringstream ss;
     ss << "{";
-    ss << Node::get_label_for_leaf(this->leaves[0]); // assert guarantees existance
+    // assert guarantees that label exists
+    ss << LeafLabelMapper::get_label_from_leaf_id(this->leaves[0]);
     for(size_t i = 1; i < this->leaves.size(); ++i) {
-        ss << "," << Node::get_label_for_leaf(this->leaves[i]);
+        ss << "," << LeafLabelMapper::get_label_from_leaf_id(this->leaves[i]);
     }
     ss << "}";
     return ss.str();

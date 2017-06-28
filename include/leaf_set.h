@@ -1,7 +1,7 @@
 /*** DO NOT INCLUDE DIRECTLY, INCLUDE types.h INSTEAD ***/
 #pragma once
 
-//"constraints.h" included via types.h
+#include "constraints.h"
 
 #include <boost/dynamic_bitset.hpp>
 #include <tuple>

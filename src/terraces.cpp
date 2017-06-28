@@ -4,9 +4,7 @@
  Alexandros.Stamatakis@gmail.com
  */
 
-#include "input_parser.h"
 #include "terraces.h"
-#include "types.h"
 #include "util.h"
 
 #include <assert.h>
@@ -66,10 +64,10 @@ int terraceAnalysis(missingData *m,
     }
 
     // mapping of leaf IDs to their labels (availably static)
-    Node::speciesNames = m->speciesNames;
+    LeafLabelMapper::species_names = m->speciesNames;
     // mapping of labels to leaf IDs
     for (size_t i = 0; i < m->numberOfSpecies; i++) {
-        Node::label_to_id[m->speciesNames[i]] = i;
+        LeafLabelMapper::label_to_leaf_id[m->speciesNames[i]] = i;
     }
     
     ntree_t *nwk_tree = get_newk_tree_from_string(newickTreeString);

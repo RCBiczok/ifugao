@@ -2,7 +2,6 @@
 #pragma once
 
 #include <assert.h>
-#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -11,13 +10,6 @@ class Node {
 public:
     virtual std::string to_newick_string();
     virtual bool is_leaf();
-    
-// TODO these could be moved , but for now I'll just leave it here
-    static char* get_label_for_leaf(const size_t leaf);
-    static size_t get_leaf_from_label(const char* label);
-
-    static std::map<const char*, size_t> label_to_id;
-    static char **speciesNames;
 };
 
 class Leaf : public Node {

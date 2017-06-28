@@ -1,6 +1,8 @@
 /*** DO NOT INCLUDE DIRECTLY, INCLUDE types.h INSTEAD ***/
 #pragma once
 
+#include "tree.h"
+
 /**
  * A simple constraint structure. It is meant to be used as:
  * lca(smaller_left, smaller_right) < lca(bigger_left, bigger_right)

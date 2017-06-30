@@ -7,9 +7,12 @@
 #include <vector>
 
 class Node {
-public:
-    virtual std::string to_newick_string();
-    virtual bool is_leaf();
+public: 
+    virtual std::string to_newick_string() const;
+    virtual bool is_leaf() const;
+    virtual size_t get_leaf() const;
+    virtual constraint get_constraints(
+            std::vector<constraint> &constraints) const;
 };
 
 class Leaf : public Node {
@@ -18,10 +21,11 @@ public:
 
     size_t leaf_id;
     
-    std::string to_newick_string();
-    bool is_leaf() {
-        return true;
-    }
+    std::string to_newick_string() const;
+    bool is_leaf() const { return true; }
+    size_t get_leaf() const { return leaf_id; }
+    
+    constraint get_constraints(std::vector<constraint> &constraints) const;
 };
 
 class InnerNode : public Node {
@@ -32,10 +36,14 @@ public:
     std::shared_ptr<Node> left;
     std::shared_ptr<Node> right;
 
-    std::string to_newick_string();
-    bool is_leaf() {
-        return false;
+    std::string to_newick_string() const;
+    bool is_leaf() const { return false; }
+    size_t get_leaf() const {
+        // may not be called, use is_leaf() to prevent calling it
+        assert(false);
+        return 0;
     }
+    constraint get_constraints(std::vector<constraint> &constraints) const;
 };
 
 class UnrootedNode : public Node {
@@ -48,10 +56,14 @@ public:
     std::shared_ptr<Node> elem2;
     std::shared_ptr<Node> elem3;
 
-    std::string to_newick_string();
-    bool is_leaf() {
-        return false;
+    std::string to_newick_string() const;
+    bool is_leaf() const { return false; }
+    size_t get_leaf() const {
+        // may not be called, use is_leaf() to prevent calling it
+        assert(false);
+        return 0;
     }
+    constraint get_constraints(std::vector<constraint> &constraints) const;
 };
 
 class AllBinaryCombinationsNode : public Node {
@@ -62,10 +74,14 @@ public:
 
     std::vector<size_t> leaves;
     
-    std::string to_newick_string();
-    bool is_leaf() {
-        return false;
+    std::string to_newick_string() const;
+    bool is_leaf() const { return false; }
+    size_t get_leaf() const {
+        // may not be called, use is_leaf() to prevent calling it
+        assert(false);
+        return 0;
     }
+    constraint get_constraints(std::vector<constraint> &constraints) const;
 };
 
 typedef std::shared_ptr<Node> NodePtr;

@@ -1,20 +1,7 @@
 /*** DO NOT INCLUDE DIRECTLY, INCLUDE types.h INSTEAD ***/
 #pragma once
 
-#include "tree.h"
-
-/**
- * A simple constraint structure. It is meant to be used as:
- * lca(smaller_left, smaller_right) < lca(bigger_left, bigger_right)
- */
-struct constraint {
-    size_t smaller_left;
-    size_t bigger_left;
-    size_t smaller_right;
-    size_t bigger_right;
-};
-
-#include "leaf_set.h"
+#include "types.h"
 
 /**
  * Returns a vector containing all constraints that still are valid for the given set of leaves.

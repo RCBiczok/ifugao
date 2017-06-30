@@ -1,10 +1,9 @@
 /*** DO NOT INCLUDE DIRECTLY, INCLUDE types.h INSTEAD ***/
 #pragma once
 
-#include "constraints.h"
-
 #include <boost/dynamic_bitset.hpp>
-#include <tuple>
+
+#include "types.h"
 
 class LeafSet {
 public:

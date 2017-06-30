@@ -1,7 +1,6 @@
 #pragma once
 
-#include<assert.h>
-#include <map>
+#include "types.h"
 
 /**
  * Static variables and methods to map leaf_id <->label

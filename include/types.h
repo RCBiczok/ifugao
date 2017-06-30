@@ -2,9 +2,26 @@
 
 #include <cstddef>
 typedef std::size_t size_t;     // for size_t
+#include <assert.h>
+#include <map>
+#include <memory>
+#include <string>
+#include <tuple>
+#include <vector>
 
-#include "leaf_label_mapper.h"  // needs no includes
-#include "tree.h"               // needs no includes
+/**
+ * A simple constraint structure. It is meant to be used as:
+ * lca(smaller_left, smaller_right) < lca(bigger_left, bigger_right)
+ */
+struct constraint {
+    size_t smaller_left;
+    size_t bigger_left;
+    size_t smaller_right;
+    size_t bigger_right;
+};
+
+#include "leaf_label_mapper.h"  // needs no other includes
+#include "tree.h"               // needs defined constraint struct
+#include "leaf_set.h"           // needs defined constraint struct
 #include "constraints.h"        // needs tree.h and leaf_set.h
-//#include "leaf_set.h"           // included by constraints.h
 

@@ -82,7 +82,7 @@ int terraceAnalysis(missingData *m,
     // nwk_tree is no longer needed
     ntree_destroy(nwk_tree);
     
-    std::vector<constraint> constraints = 
+    std::vector<constraint> constraints =
             extract_constraints_from_supertree(rtree, m);
     
     BitLeafSet leaf_set(m->numberOfSpecies);
@@ -193,23 +193,6 @@ void setDataMatrix(missingData *m, size_t speciesNumber, size_t partitionNumber,
 void copyDataMatrix(const unsigned char *matrix, missingData *m) {
     memcpy(m->missingDataMatrix, matrix,
            m->numberOfPartitions * m->numberOfSpecies);
-}
-
-/* get an element from the missing data matrix */
-
-unsigned char getDataMatrix(const missingData *m, size_t speciesNumber,
-                            size_t partitionNumber) {
-    assert(speciesNumber < m->numberOfSpecies);
-    assert(speciesNumber >= 0);
-
-    assert(partitionNumber < m->numberOfPartitions);
-    assert(partitionNumber >= 0);
-
-    unsigned char value = m->missingDataMatrix[speciesNumber
-                                               * m->numberOfPartitions + partitionNumber];
-    assert(value == 0 || value == 1);
-
-    return value;
 }
 
 std::vector<constraint> extract_constraints_from_supertree(

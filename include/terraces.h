@@ -107,25 +107,10 @@ void freeMissingData(missingData *m);
  * 
  * @param value value to be set 
  */
-
+/*
 void setDataMatrix(missingData *m, size_t speciesNumber, size_t partitionNumber,
         unsigned char value);
-
-/**
- * get entry from missing data matrix 
- * 
- * @param m pointer to missing data data structure 
- * 
- * @param speciesNumber species index 
- *
- * @param partitionNumber partition index 
- * 
- * @return the value at the specified matrix position 
- */
-
-unsigned char getDataMatrix(const missingData *m, size_t speciesNumber,
-        size_t partitionNumber);
-
+*/
 /**
  * copy one dimensional array containing the missing data matrix to the matrix in the missing data data type
  * 

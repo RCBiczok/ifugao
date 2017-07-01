@@ -8,7 +8,15 @@ public:
     virtual std::string to_newick_string() const;
     virtual bool is_leaf() const;
     virtual size_t get_leaf() const;
-    virtual constraint get_constraints(
+    
+    /**
+     * Returns a vector containing all constraints infered from this tree.
+     *
+     * @return All constraints of this tree.
+     */
+    std::vector<constraint> extract_constraints() const;
+    
+    virtual std::tuple<size_t, size_t> get_constraints(
             std::vector<constraint> &constraints) const;
 };
 
@@ -22,7 +30,7 @@ public:
     bool is_leaf() const { return true; }
     size_t get_leaf() const { return leaf_id; }
     
-    constraint get_constraints(std::vector<constraint> &constraints) const;
+    std::tuple<size_t, size_t> get_constraints(std::vector<constraint> &constraints) const;
 };
 
 class InnerNode : public Node {
@@ -40,7 +48,8 @@ public:
         assert(false);
         return 0;
     }
-    constraint get_constraints(std::vector<constraint> &constraints) const;
+    
+    std::tuple<size_t, size_t> get_constraints(std::vector<constraint> &constraints) const;
 };
 
 class UnrootedNode : public Node {
@@ -60,7 +69,8 @@ public:
         assert(false);
         return 0;
     }
-    constraint get_constraints(std::vector<constraint> &constraints) const;
+    
+    std::tuple<size_t, size_t> get_constraints(std::vector<constraint> &constraints) const;
 };
 
 class AllBinaryCombinationsNode : public Node {
@@ -78,7 +88,8 @@ public:
         assert(false);
         return 0;
     }
-    constraint get_constraints(std::vector<constraint> &constraints) const;
+    
+    std::tuple<size_t, size_t> get_constraints(std::vector<constraint> &constraints) const;
 };
 
 typedef std::shared_ptr<Node> NodePtr;

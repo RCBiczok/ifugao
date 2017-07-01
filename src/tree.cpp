@@ -9,11 +9,10 @@ std::string Leaf::to_newick_string() const {
     return LeafLabelMapper::get_label_from_leaf_id(this->leaf_id);
 }
 
-constraint Leaf::get_constraints(std::vector<constraint> &constraints) const {
+std::tuple<size_t, size_t> Leaf::get_constraints(std::vector<constraint> &constraints) const {
     // may not be called
     assert(false);
-    constraint c;
-    return c;
+    return std::make_tuple(0, 0);
 }
 
 std::string InnerNode::to_newick_string() const {
@@ -99,11 +98,10 @@ std::string UnrootedNode::to_newick_string() const {
     return ss.str();
 }
 
-constraint UnrootedNode::get_constraints(std::vector<constraint> &constraints) const {
+std::tuple<size_t, size_t> UnrootedNode::get_constraints(std::vector<constraint> &constraints) const {
     // may not be called
     assert(false);
-    constraint c;
-    return c;
+    return std::make_tuple(0, 0);
 }
 
 std::string AllBinaryCombinationsNode::to_newick_string() const {
@@ -120,10 +118,9 @@ std::string AllBinaryCombinationsNode::to_newick_string() const {
     return ss.str();
 }
 
-constraint AllBinaryCombinationsNode::get_constraints(
+std::tuple<size_t, size_t> AllBinaryCombinationsNode::get_constraints(
         std::vector<constraint> &constraints) const {
     // may not be called
     assert(false);
-    constraint c;
-    return c;
+    return std::make_tuple(0, 0);
 }

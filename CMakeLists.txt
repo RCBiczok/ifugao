@@ -25,6 +25,7 @@ set(CORE_HEADERS
         include/input_parser.h
         include/leaf_label_mapper.h
         include/leaf_set.h
+        include/missing_data.h
         include/terraces.h
         include/tree.h
         include/types.h

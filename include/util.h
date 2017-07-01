@@ -2,10 +2,10 @@
 
 //this file contains useful function that don't belong anywhere else
 
+#include "types.h"
 #include "newick-tools/newick-tools.h"
 #include "input_parser.h"
 #include "terraces.h"
-#include "types.h"
 
 #include <cstring>
 #include <map>
@@ -73,18 +73,4 @@ bool check_tree(ntree_t *tree);
  */
 void fix_tree(ntree_t *tree);
 
-/**
- * get entry from missing data matrix 
- * 
- * @param m pointer to missing data data structure 
- * 
- * @param speciesNumber species index 
- *
- * @param partitionNumber partition index 
- * 
- * @return the value at the specified matrix position 
- */
-
-unsigned char getDataMatrix(const missingData *m, size_t speciesNumber,
-        size_t partitionNumber);
 

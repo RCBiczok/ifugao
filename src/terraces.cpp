@@ -5,16 +5,12 @@
  */
 
 #include "terraces.h"
-#include "util.h"
 
-#include <assert.h>
-#include <map>
 #include <math.h>
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
-#include <string.h>
 #include <stdbool.h>
 #include <gmp.h>
 
@@ -26,7 +22,7 @@ int terraceAnalysis(missingData *m,
     size_t i = 0;
     size_t j = 0;
 
-    mpz_set_ui(*terraceSize, 0);
+    mpz_set_ui(*terraceSize, 0); // gmp library call
 
     //some debugging print outs
     d_printf("read_tree = %s\n", newickTreeString);

@@ -3,6 +3,7 @@
 #include "types.h"
 #include "ifugao.h"
 #include "input_parser.h"
+#include "util.h"
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -63,15 +64,6 @@
  optional, does not need to be implemented, only if you want to.
  */
 #define TA_ENUMERATE_COMPRESS 8
-
-// data type containing data to be passed to the algorithm we want to implement 
-typedef struct {
-    size_t numberOfSpecies;
-    size_t numberOfPartitions;
-    unsigned char *missingDataMatrix;
-    char **speciesNames;
-    bool allocatedNameArray;
-} missingData;
 
 /**
  * Initialize missing data data type 

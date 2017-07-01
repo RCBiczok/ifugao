@@ -1,5 +1,6 @@
 #include <gmp.h>
 
+#include "types.h"
 #include "input_parser.h"
 #include "terraces.h"
 
@@ -7,15 +8,14 @@
 //TODO: Not that intuitive
 int main(int argc, char *argv[]) {
     if (argc != 3) {
-        printf(
-                "Specify .data and .nwk as first and second argument to analyze them.\n");
+        printf("Specify .data and .nwk as first and second argument to analyze them.\n");
     }
     //TODO shouldn't we stop if argc != 3?
     input_data *read_data = parse_input_data(argv[1]);
     char *read_tree = read_newk_tree(argv[2]);
 
     mpz_t alliumTerraceSize;
-    mpz_init(alliumTerraceSize);
+    mpz_init(alliumTerraceSize); // gmp library call
 
     FILE *empiricalTrees = fopen("empiricalTrees", "w");
 
@@ -25,14 +25,14 @@ int main(int argc, char *argv[]) {
                                                const_cast<const char **>(read_data->names));
 
         copyDataMatrix(read_data->matrix, m);
-        mpz_set_ui(alliumTerraceSize, 0);
+        mpz_set_ui(alliumTerraceSize, 0); // gmp library call
 
         int errorCode = terraceAnalysis(m, read_tree, TA_COUNT + TA_ENUMERATE,
                                         empiricalTrees, &alliumTerraceSize);
         if (errorCode == TERRACE_SUCCESS) {
             char *alliumTerraceSizeString = nullptr;
             alliumTerraceSizeString = mpz_get_str(alliumTerraceSizeString, 10,
-                                                  alliumTerraceSize);
+                                                  alliumTerraceSize); // gmp
 
             printf("Empirical data set %s terrace size %s \n", argv[1],
                    alliumTerraceSizeString);

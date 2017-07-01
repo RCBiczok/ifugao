@@ -71,8 +71,8 @@ std::vector<NodePtr> find_all_trees(
             std::tie(part_left, part_right) =
                     leaf_set.get_nth_partition_tuple(partitions,i);
 
-            auto constraints_left = find_constraints(part_left, constraints);
-            auto constraints_right = find_constraints(part_right, constraints);
+            auto constraints_left = part_left.filter_constraints(constraints);
+            auto constraints_right = part_right.filter_constraints(constraints);
 
             auto subtrees_left = find_all_trees(part_left, constraints_left);
             auto subtrees_right = find_all_trees(part_right, constraints_right);

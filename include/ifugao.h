@@ -56,16 +56,6 @@ std::vector<NodePtr> merge_unrooted_subtrees(
 void write_tree(Tree &tree, FILE &file);
 
 /**
- * Checks whenever the n-th bit is set in the given number
- * @param num the number to check
- * @param n the n-th bit to check whenever it is set or not
- * @return true of the n-th bit is set
- */
-inline bool is_bit_set(size_t num, size_t n) {
-    return 1 == ((num >> n) & 1);
-}
-
-/**
  * Returns the number of partition tuples that can be formed by combining the
  * given list of partitions. The formular is 2^(n-1) - 1, where n is the size of
  * the list.

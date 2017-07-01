@@ -18,6 +18,16 @@ struct constraint {
     size_t bigger_left;
     size_t smaller_right;
     size_t bigger_right;
+    
+    constraint();
+    
+    constraint(size_t smaller_left,
+               size_t bigger_left,
+               size_t smaller_right,
+               size_t bigger_right) : smaller_left(smaller_left),
+                                      bigger_left(bigger_left),
+                                      smaller_right(smaller_right),
+                                      bigger_right(bigger_right) {}
 };
 
 #include "leaf_label_mapper.h"  // needs no other includes

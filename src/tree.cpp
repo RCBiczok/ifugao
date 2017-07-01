@@ -49,46 +49,32 @@ std::tuple<size_t, size_t> InnerNode::get_constraints(
         // right edge is an inner edge
         left_most_leaf = this->left->get_leaf();
         auto right_tuple = this->right->get_constraints(constraints);
-        right_most_leaf = right_tuple.second;
+        right_most_leaf = std::get<1>(right_tuple);
         
-        constraint c;
-        c.smaller_left = left_most_leaf;
-        c.bigger_left = left_most_leaf;
-        c.smaller_right = right_tuple.first;
-        c.bigger_right = right_tuple.second;        
-        constraints.push_back(c);
+        // constraint for right inner edge
+        constraints.emplace_back(left_most_leaf, left_most_leaf,
+                std::get<0>(right_tuple), std::get<1>(right_tuple));
     } else if(right_leaf) {
         // left edge is an inner edge
         auto left_tuple = this->left->get_constraints(constraints);
-        left_most_leaf = left_tuple.first;
+        left_most_leaf = std::get<0>(left_tuple);
         right_most_leaf = this->right->get_leaf();
         
-        constaint c;
-        c.smaller_left = left_tuple.first;
-        c.bigger_left = left_tuple.sectond;
-        c.smaller_right = right_most_leaf;
-        c.bigger_right = right_most_leaf;
-        constraints.push_back(c);
+        // constraint for left inner edge
+        constraints.emplace_back(std::get<0>(left_tuple),
+                std::get<1>(left_tuple), right_most_leaf, right_most_leaf);
     } else {
         // left and right edge are inner edges
-        constraint c_left = this->left->get_constraints(constraints);
-        constraint c_right = this->right->get_constraints(constraints);
-        left_most_leaf = c_left.first;
-        right_most_leaf = c_right.second;
-        
-        constraint left_c;
-        left_c.smaller_left = left_most_leaf;
-        left_c.bigger_left = left_most_leaf;
-        left_c.smaller_right = right_tuple.first;
-        left_c.bigger_right = right_tuple.second;
-        constraints.push_back(left_c);
-                
-        constraint right_c;
-        right_c.smaller_left = left_most_leaf;
-        right_c.bigger_left = left_most_leaf;
-        right_c.smaller_right = right_tuple.first;
-        right_c.bigger_right = right_tuple.second;
-        constraints.push_back(right_c);
+        auto left_tuple = this->left->get_constraints(constraints);
+        auto right_tuple = this->right->get_constraints(constraints);
+        left_most_leaf = std::get<0>(left_tuple);
+        right_most_leaf = std::get<1>(right_tuple);
+        // constraint for left inner edge
+        constraints.emplace_back(std::get<0>(left_tuple),
+                std::get<1>(left_tuple), right_most_leaf, right_most_leaf);
+        // constraint for right inner edge
+        constraints.emplace_back(left_most_leaf, left_most_leaf,
+                std::get<0>(right_tuple), std::get<1>(right_tuple));
     }
     
     return std::make_tuple(left_most_leaf, right_most_leaf);

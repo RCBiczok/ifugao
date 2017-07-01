@@ -23,5 +23,4 @@ struct constraint {
 #include "leaf_label_mapper.h"  // needs no other includes
 #include "tree.h"               // needs defined constraint struct
 #include "leaf_set.h"           // needs defined constraint struct
-#include "constraints.h"        // needs tree.h and leaf_set.h
 

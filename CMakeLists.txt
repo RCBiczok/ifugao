@@ -21,7 +21,6 @@ include(ConfigSafeGuards)
 set(CORE_HEADERS
         include/newick-tools/newick-tools.h
         include/newick-tools/parse_ntree.h
-        include/constraints.h
         include/ifugao.h
         include/input_parser.h
         include/leaf_label_mapper.h
@@ -39,7 +38,6 @@ set(NEWICK_TOOLS_SRCS
         src/newick-tools/rtree.cpp)
 
 set(CORE_SRCS
-        src/constraints.cpp
         src/ifugao.cpp
         src/input_parser.cpp
         src/leaf_set.cpp

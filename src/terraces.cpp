@@ -222,7 +222,7 @@ std::vector<constraint> extract_constraints_from_supertree(
     // foreach partition
     for (size_t i = 0; i < missing_data->numberOfPartitions; i++) {
         auto tree = generate_induced_tree(supertree, missing_data, i);
-        auto constraints = extract_constraints_from_tree(tree);
+        auto constraints = tree->extract_constraints();
         for (auto &c : constraints) {
             //avoid duplications
             constraint_key key(c.smaller_left, c.smaller_right, c.bigger_left,

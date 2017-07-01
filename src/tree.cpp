@@ -5,6 +5,14 @@
 
 #include "leaf_label_mapper.h"
 
+std::vector<constraint> Node::extract_constraints() const {
+    std::vector<constraint> constraints;
+    
+    this->get_constraints(constraints);
+    
+    return constraints;
+}
+
 std::string Leaf::to_newick_string() const {
     return LeafLabelMapper::get_label_from_leaf_id(this->leaf_id);
 }

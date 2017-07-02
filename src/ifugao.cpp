@@ -1,8 +1,5 @@
 #include "ifugao.h"
 
-//#include <terraces.h>
-#include <map>
-
 size_t list_trees(const std::vector<constraint> &constraints,
                   const size_t &root_id,
                   LeafSet &leaf_set,

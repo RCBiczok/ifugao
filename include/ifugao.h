@@ -1,9 +1,5 @@
 #pragma once
 
-#include <memory>
-#include <vector>
-#include <set>
-#include <assert.h>
 #include <iostream>
 
 #include "types.h"
@@ -16,8 +12,6 @@
  *      [recursion stop]
  *        get_all_binary_trees
  *      apply_constraints
- *     
- * 
  */
 
 /**

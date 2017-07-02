@@ -4,8 +4,6 @@
 
 #include "types.h"
 #include "newick-tools/newick-tools.h"
-#include "input_parser.h"
-#include "terraces.h"
 
 #include <cstring>
 #include <iostream>

@@ -66,55 +66,6 @@
 #define TA_ENUMERATE_COMPRESS 8
 
 /**
- * Initialize missing data data type 
- *
- * @param numberOfSpecies number of species in dataset 
- *
- * @param numberOfPartitions number of partitions in dataset 
- *
- * @param speciesNames list of species names in dataset, first entry correpsonds to first row in missingDataMatrix etc. 
- * 
- * @return poitner to missing data data structure 
- */
-
-missingData * initializeMissingData(size_t numberOfSpecies,
-        size_t numberOfPartitions, const char **speciesNames);
-
-/**
- * Free missing data data structure 
- * 
- * @param m pointer to missing data data structure 
- */
-
-void freeMissingData(missingData *m);
-
-/**
- * set entry in missing data matrix 
- * 
- * @param m pointer to missing data data structure 
- * 
- * @param speciesNumber species index 
- *
- * @param partitionNumber partition index 
- * 
- * @param value value to be set 
- */
-/*
-void setDataMatrix(missingData *m, size_t speciesNumber, size_t partitionNumber,
-        unsigned char value);
-*/
-/**
- * copy one dimensional array containing the missing data matrix to the matrix in the missing data data type
- * 
- * @param matrix one-dimensional 
- * 
- * @param m pointer to missing data data structure 
- * 
- */
-
-void copyDataMatrix(const unsigned char *matrix, missingData *m);
-
-/**
  * Returns a vector containing all constraints infered from the given supertree.
  *
  * @param supertree the supertree we want to extract constraints from

@@ -75,7 +75,7 @@ int terraceAnalysis(missingData *m,
     if(rtree == nullptr) {
         return TERRACE_NO_SPECIES_WITH_FULL_SET;
     }
-    // nwk_tree is no longer needed
+    // nwk_tree is no longer needed [newick-tools]
     ntree_destroy(nwk_tree);
     
     std::vector<constraint> constraints =
@@ -85,7 +85,7 @@ int terraceAnalysis(missingData *m,
     
     size_t num_trees = list_trees(constraints, root_species_id, leaf_set,
                                   allTreesOnTerrace);
-    mpz_set_ui(*terraceSize, num_trees);
+    mpz_set_ui(*terraceSize, num_trees); // gmp
 
     /* e.g., include an error check to make sure the Newick tree you have parsed contains as many species as indicated by numberOfSpecies */
 
@@ -112,88 +112,11 @@ int terraceAnalysis(missingData *m,
 
 /************************************************************************************************************************/
 
-/* functions for handling the missing data data structure */
-
-/* allocate and initialize */
-
-missingData *initializeMissingData(size_t numberOfSpecies,
-                                   size_t numberOfPartitions, const char **speciesNames) {
-    missingData *m = new missingData();
-
-    m->numberOfSpecies = numberOfSpecies;
-
-    m->numberOfPartitions = numberOfPartitions;
-
-    //if the species names have been passed by the application programmer just set a pointer to them
-    if (speciesNames != nullptr) {
-        m->speciesNames = const_cast<char **>(speciesNames);
-        m->allocatedNameArray = 0;
-    }
-    //otherwise, we assume that species names are just indexes
-    else {
-        m->allocatedNameArray = 1;
-        m->speciesNames = new char*[numberOfSpecies];
-
-        size_t i;
-
-        char buffer[1024];
-
-        for (i = 0; i < numberOfSpecies; i++) {
-            sprintf(buffer, "%zu", i);
-
-            size_t n = strlen(buffer);
-
-            m->speciesNames[i] = new char[n + 1];
-
-            strcpy(m->speciesNames[i], buffer);
-        }
-    }
-
-    m->missingDataMatrix = new unsigned char [
-             numberOfSpecies * numberOfPartitions];
-
-    return m;
-}
-
-/* free */
-
-void freeMissingData(missingData *m) {
-    free(m->missingDataMatrix);
-
-    if (m->allocatedNameArray == 1) {
-        size_t i;
-        for (i = 0; i < m->numberOfSpecies; i++)
-            free(m->speciesNames[i]);
-        free(m->speciesNames);
-    }
-
-    free(m);
-}
-
-/* set an element in the missing data matrix */
-
-void setDataMatrix(missingData *m, size_t speciesNumber, size_t partitionNumber,
-                   unsigned char value) {
-    assert(speciesNumber < m->numberOfSpecies);
-    assert(speciesNumber >= 0);
-
-    assert(partitionNumber < m->numberOfPartitions);
-    assert(partitionNumber >= 0);
-
-    assert(value == 0 || value == 1);
-
-    m->missingDataMatrix[speciesNumber * m->numberOfPartitions + partitionNumber] =
-            value;
-}
-
-void copyDataMatrix(const unsigned char *matrix, missingData *m) {
-    memcpy(m->missingDataMatrix, matrix,
-           m->numberOfPartitions * m->numberOfSpecies);
-}
 
 std::vector<constraint> extract_constraints_from_supertree(
         const Tree supertree,
         const missingData *missing_data) {
+    // TODO better collision detection, e.g. with a hash map
     // map all found constraints, so there will be no duplicates
     typedef std::tuple<size_t, size_t, size_t, size_t> constraint_key;
     std::map<constraint_key, constraint> constraint_map;

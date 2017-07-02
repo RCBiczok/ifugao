@@ -1,11 +1,10 @@
 #include "input_parser.h"
 
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-
-#include "util.h"
 
 //parse input data from input example files 
 input_data *parse_input_data(const char *data_file) {
@@ -107,3 +106,31 @@ ntree_t *get_newk_tree_from_string(const char *nwk_string) {
     fix_tree(tree); //necessary since tree seems to be corrupt
     return tree;
 }
+
+bool check_tree(ntree_t *tree) {
+    for (int i = 0; i < tree->children_count; i++) {
+        if (tree != tree->children[i]->parent) {
+            if (tree->children[i]->label != nullptr) {
+                std::cout << tree << ": parent of " << tree->children[i]->label
+                          << " is wrong: " << tree->children[i]->parent
+                          << std::endl;
+            } else {
+                std::cout << tree << ": parent of " << tree->children[i]
+                          << " is wrong: " << tree->children[i]->parent
+                          << std::endl;
+            }
+        }
+        check_tree(tree->children[i]);
+    }
+    return true;
+}
+
+void fix_tree(ntree_t *tree) {
+    assert(tree != nullptr);
+    int x = tree->children_count;
+    for (int i = 0; i < x; i++) {
+        tree->children[i]->parent = tree;
+        fix_tree(tree->children[i]);
+    }
+}
+

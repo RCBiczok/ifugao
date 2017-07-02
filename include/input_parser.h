@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdlib.h>
+
 #include "newick-tools/newick-tools.h"
 #include "newick-tools/parse_ntree.h"
 
@@ -58,6 +59,20 @@ ntree_t* get_newk_tree(const char* nwk_file);
  * @return a point to a node in the tree.
  */
 ntree_t *get_newk_tree_from_string(const char *nwk_string);
+
+    
+/**
+ * @brief check_tree do a dfs on the tree and check, if the childs parent is the current node.
+ * @param tree the tree to check
+ * @return true if the tree is correct
+ */
+bool check_tree(ntree_t *tree);
+
+/**
+ * @brief fix_tree makes sure, that tree->child[i]->parent == tree
+ * @param tree the tree to fix
+ */
+void fix_tree(ntree_t *tree);
 
 #ifdef __cplusplus
 }

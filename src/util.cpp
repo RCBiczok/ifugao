@@ -172,33 +172,6 @@ Tree root_recursive(ntree_t *current_ntree, ntree_t *parent) {
     }
 }
 
-bool check_tree(ntree_t *tree) {
-    for (int i = 0; i < tree->children_count; i++) {
-        if (tree != tree->children[i]->parent) {
-            if (tree->children[i]->label != nullptr) {
-                std::cout << tree << ": parent of " << tree->children[i]->label
-                          << " is wrong: " << tree->children[i]->parent
-                          << std::endl;
-            } else {
-                std::cout << tree << ": parent of " << tree->children[i]
-                          << " is wrong: " << tree->children[i]->parent
-                          << std::endl;
-            }
-        }
-        check_tree(tree->children[i]);
-    }
-    return true;
-}
-
-void fix_tree(ntree_t *tree) {
-    assert(tree != nullptr);
-    int x = tree->children_count;
-    for (int i = 0; i < x; i++) {
-        tree->children[i]->parent = tree;
-        fix_tree(tree->children[i]);
-    }
-}
-
 /* get an element from the missing data matrix */
 unsigned char getDataMatrix(const missingData *m, size_t speciesNumber,
                             size_t partitionNumber) {

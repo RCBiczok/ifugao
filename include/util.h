@@ -8,11 +8,7 @@
 #include "terraces.h"
 
 #include <cstring>
-#include <map>
-#include <memory>
-#include <string>
 #include <iostream>
-#include <vector>
 
 /**
  * This function generates the trees T|G_i, which is exactly the subtree of T 
@@ -59,18 +55,4 @@ Tree root_at(ntree_t *root);
  * @param parent the ntree_t represention of the parent. this is needed to avoid calling the recursion on the parent
  */
 Tree root_recursive(ntree_t *current_ntree, ntree_t *parent);
-
-/**
- * @brief check_tree do a dfs on the tree and check, if the childs parent is the current node.
- * @param tree the tree to check
- * @return true if the tree is correct
- */
-bool check_tree(ntree_t *tree);
-
-/**
- * @brief fix_tree makes sure, that tree->child[i]->parent == tree
- * @param tree the tree to fix
- */
-void fix_tree(ntree_t *tree);
-
 

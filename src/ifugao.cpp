@@ -66,7 +66,7 @@ std::vector<NodePtr> find_all_trees(
             iterate over. 
             */
             std::tie(part_left, part_right) =
-                    leaf_set->get_nth_partition_tuple(partitions,i);
+                    leaf_set->get_nth_partition_pair(partitions,i);
             
             auto constraints_left = part_left->filter_constraints(constraints);
             auto constraints_right = part_right->filter_constraints(constraints);

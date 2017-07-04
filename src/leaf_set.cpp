@@ -68,14 +68,14 @@ bool BitLeafSet::contains(const size_t leaf) const {
     return this->set.test(leaf);
 }
 
-std::tuple<LeafSetPtr, LeafSetPtr> BitLeafSet::get_nth_partition_tuple(
+std::pair<LeafSetPtr, LeafSetPtr> BitLeafSet::get_nth_partition_pair(
             const std::vector<LeafSetPtr> &partitions, const size_t n) const {
     //TODO asserts
     // TODO assert partitions isoftype std::vector<BitLeafSet>
     BitLeafSetPtr part_one = std::make_unique<BitLeafSet>(this->set.size());
     BitLeafSetPtr part_two = std::make_unique<BitLeafSet>(this->set.size());
     
-    //TODO assert(n > 0 && n <= number_partition_tuples(partitions));
+    //TODO assert(n > 0 && n <= number_partition_pair(partitions));
     //TODO assert(is_bit_set(n,0)==false); // 1st bit is never set
     
     for (size_t i = 1; i < partitions.size(); i++) {
@@ -90,7 +90,7 @@ std::tuple<LeafSetPtr, LeafSetPtr> BitLeafSet::get_nth_partition_tuple(
     // no bit may be set in both sets
     assert(!(part_one->set & part_two->set).any());
     
-    return std::make_tuple(std::move(part_one), std::move(part_two));
+    return std::make_pair(std::move(part_one), std::move(part_two));
 }
 
 void BitLeafSet::insert_leaf(const size_t leaf) {

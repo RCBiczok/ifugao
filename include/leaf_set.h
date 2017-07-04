@@ -59,7 +59,7 @@ public:
             const std::vector<constraint> &constraints) const = 0;
     
     /********* other ***********/
-    virtual std::tuple<LeafSetPtr, LeafSetPtr> get_nth_partition_tuple(
+    virtual std::pair<LeafSetPtr, LeafSetPtr> get_nth_partition_pair(
             const std::vector<LeafSetPtr> &partitions, const size_t n) const = 0;
 };
 
@@ -80,7 +80,7 @@ public:
     std::vector<constraint> filter_constraints(
             const std::vector<constraint> &constraints) const;
     
-    std::tuple<LeafSetPtr, LeafSetPtr> get_nth_partition_tuple(
+    std::pair<LeafSetPtr, LeafSetPtr> get_nth_partition_pair(
             const std::vector<LeafSetPtr> &partitions, const size_t n) const;
 private:
     bitset set;

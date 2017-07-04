@@ -25,12 +25,12 @@
  */
 size_t list_trees(const std::vector<constraint> &constraints,
                   const size_t &root_id,
-                  LeafSet &leaf_set,
+                  LeafSetPtr &leaf_set,
                   FILE *file);
 
 /** Combines all sets (constraints need to be applied already) */
 std::vector<NodePtr> find_all_trees(
-        const LeafSet &leaf_set,
+        const LeafSetPtr &leaf_set,
         const std::vector<constraint> &constraints,
         const bool unrooted = false,
         const size_t root_id = 0);
@@ -57,7 +57,7 @@ void write_tree(Tree &tree, FILE &file);
  * @return the number of partition tuples that can be formed from the given list
  */
 inline size_t number_partition_tuples(
-        const std::vector<LeafSet> &partitions) {
+        const std::vector<LeafSetPtr> &partitions) {
     assert(partitions.size() > 1);
 
     return (1 << (partitions.size() - 1)) - 1;

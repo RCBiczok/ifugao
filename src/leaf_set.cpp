@@ -7,9 +7,13 @@ BitLeafSet::BitLeafSet(size_t amount_of_leaves) {
     this->set.set();
 }
 
-std::vector<LeafSet> BitLeafSet::apply_constraints(
+BitLeafSet::BitLeafSet(bitset &set) {
+    this->set = set;
+}
+
+std::vector<LeafSetPtr> BitLeafSet::apply_constraints(
         const std::vector<constraint> &constraints) const {
-    std::vector<BitLeafSet> new_sets;
+    std::vector<bitset> new_sets;
     
     for (constraint c : constraints) {
         assert(this->set[c.smaller_left] && this->set[c.smaller_right]);
@@ -20,13 +24,12 @@ std::vector<LeafSet> BitLeafSet::apply_constraints(
         // check if set with one of the constraints' leaves has already been
         // created, store result in 'existed'
         for(size_t i; i < new_sets.size(); ++i) {
-            BitLeafSet new_set = new_sets[i];
-            if(new_set.set[c.smaller_left] || new_set.set[c.smaller_right]) {
+             bitset& bit_set = new_sets[i];
+            if(bit_set.test(c.smaller_left) || bit_set.test(c.smaller_right)) {
                 // set for at least one of the constraints' leaves exists
-                
                 if(existed) {// constraint merges two existing sets
                     //store merged sets as first set
-                    new_sets[found_set_ind].set |= new_set.set;
+                    new_sets[found_set_ind] |= bit_set;
                     //override second set
                     size_t last_ind = new_sets.size()-1;
                     if(i != last_ind) { // second set is not last set
@@ -35,8 +38,8 @@ std::vector<LeafSet> BitLeafSet::apply_constraints(
                     new_sets.pop_back();
                     break; // constraints can only ever merge two sets
                 } else {// constraint belongs to already existing set
-                    new_set.set.set(c.smaller_left);
-                    new_set.set.set(c.smaller_right);
+                    bit_set.set(c.smaller_left);
+                    bit_set.set(c.smaller_right);
                     found_set_ind = i;
                     existed = true;
                 }
@@ -45,15 +48,16 @@ std::vector<LeafSet> BitLeafSet::apply_constraints(
         if(!existed) {// constraint needs a new set
             new_sets.emplace_back(this->set.size());
             // no set exists yet, create new one
-            new_sets.back().set.set(c.smaller_left);
-            new_sets.back().set.set(c.smaller_right);
+            new_sets.back().set(c.smaller_left);
+            new_sets.back().set(c.smaller_right);
         }
     }
     
-    std::vector<LeafSet> return_sets;
+    std::vector<LeafSetPtr> return_sets;
     return_sets.reserve(new_sets.size());
-    for(BitLeafSet set: new_sets) {
-        return_sets.push_back(set);
+    for(bitset set: new_sets) {
+        BitLeafSetPtr wrapped_set = std::make_unique<BitLeafSet>(set);
+        return_sets.push_back(std::move(wrapped_set));
     }
     return return_sets;
 }
@@ -64,29 +68,29 @@ bool BitLeafSet::contains(const size_t leaf) const {
     return this->set.test(leaf);
 }
 
-std::tuple<LeafSet, LeafSet> BitLeafSet::get_nth_partition_tuple(
-            const std::vector<LeafSet> &partitions, const size_t n) const {
+std::tuple<LeafSetPtr, LeafSetPtr> BitLeafSet::get_nth_partition_tuple(
+            const std::vector<LeafSetPtr> &partitions, const size_t n) const {
     //TODO asserts
     // TODO assert partitions isoftype std::vector<BitLeafSet>
-    BitLeafSet part_one(this->set.size());
-    BitLeafSet part_two(this->set.size());
+    BitLeafSetPtr part_one = std::make_unique<BitLeafSet>(this->set.size());
+    BitLeafSetPtr part_two = std::make_unique<BitLeafSet>(this->set.size());
     
     //TODO assert(n > 0 && n <= number_partition_tuples(partitions));
     //TODO assert(is_bit_set(n,0)==false); // 1st bit is never set
     
     for (size_t i = 1; i < partitions.size(); i++) {
-        const BitLeafSet &old_leaf_set(static_cast<const BitLeafSet&>(partitions[i]));
+        auto bit_set_ptr = dynamic_cast<BitLeafSet&>(*partitions[i]);
         if (is_bit_set(n, i)) {
-            part_one.set |= old_leaf_set.set;
+            part_one->set |= bit_set_ptr.set;
         } else {
-            part_two.set |= old_leaf_set.set;
+            part_two->set |= bit_set_ptr.set;
         }
     }
     
     // no bit may be set in both sets
-    assert(!(part_one.set & part_two.set).any());
+    assert(!(part_one->set & part_two->set).any());
     
-    return std::make_tuple(part_one, part_two);
+    return std::make_tuple(std::move(part_one), std::move(part_two));
 }
 
 void BitLeafSet::insert_leaf(const size_t leaf) {

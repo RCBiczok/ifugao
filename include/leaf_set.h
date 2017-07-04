@@ -4,6 +4,12 @@
 #include <boost/dynamic_bitset.hpp>
 
 #include "types.h"
+class LeafSet; // for ptr declaration only
+class BitLeafSet; // for ptr declaration only
+typedef std::unique_ptr<LeafSet> LeafSetPtr;
+typedef std::unique_ptr<BitLeafSet> BitLeafSetPtr;
+
+typedef boost::dynamic_bitset<> bitset;
 
 class LeafSet {
 public:
@@ -14,53 +20,54 @@ public:
      * @param leaf The leaf to find.
      * @return Whether leaf is contained or not.
      */
-    virtual bool contains(const size_t leaf) const;
+    virtual bool contains(const size_t leaf) const = 0;
     
     /**
      * Inserts the given leaf, if not already contained.
      * @param leaf The leaf to insert.
      */
-    virtual void insert_leaf(const size_t leaf);
+    virtual void insert_leaf(const size_t leaf) = 0;
     
     /**
      * Removes the given leaf, if contained.
      * @param leaf The leaf to remove.
      */
-    virtual void remove_leaf(const size_t leaf);
+    virtual void remove_leaf(const size_t leaf) = 0;
     
     /**
      * The size of this set.
      * @return The size of this set.
      */
-    virtual size_t size() const;
+    virtual size_t size() const = 0;
     
     /**
      * Lists all leaves in this set.
      * @return A vector containing all leaves.
      */
-    virtual std::vector<size_t> get_all_leaves() const;
+    virtual std::vector<size_t> get_all_leaves() const = 0;
     
     /********* constraints section ***********/
+    virtual std::vector<LeafSetPtr> apply_constraints(
+            const std::vector<constraint> &constraints) const = 0;
     
-    virtual std::vector<LeafSet> apply_constraints(
-            const std::vector<constraint> &constraints) const;
-    
-/**
- * Returns a vector containing all constraints that can be applied to this LeafSet.
- * @param constraints A set of constraints.
- * @return All constraints that can be applied to this LeafSet.
- */
-virtual std::vector<constraint> filter_constraints(
-            const std::vector<constraint> &constraints) const;
+    /**
+     * Returns a vector containing all constraints that can be applied to this LeafSet.
+     * @param constraints A set of constraints.
+     * @return All constraints that can be applied to this LeafSet.
+     */
+    virtual std::vector<constraint> filter_constraints(
+            const std::vector<constraint> &constraints) const = 0;
     
     /********* other ***********/
-    virtual std::tuple<LeafSet, LeafSet> get_nth_partition_tuple(
-            const std::vector<LeafSet> &partitions, const size_t n) const;
+    virtual std::tuple<LeafSetPtr, LeafSetPtr> get_nth_partition_tuple(
+            const std::vector<LeafSetPtr> &partitions, const size_t n) const = 0;
 };
+
 
 class BitLeafSet : public LeafSet {
 public:
     BitLeafSet(const size_t amount_of_leaves);
+    BitLeafSet(bitset &set);
     
     bool contains(const size_t leaf) const;
     void insert_leaf(const size_t leaf);
@@ -68,16 +75,15 @@ public:
     size_t size() const;
     std::vector<size_t> get_all_leaves() const;
     
-    std::vector<LeafSet> apply_constraints(
+    std::vector<LeafSetPtr> apply_constraints(
             const std::vector<constraint> &constraints) const;
     std::vector<constraint> filter_constraints(
             const std::vector<constraint> &constraints) const;
     
-    std::tuple<LeafSet, LeafSet> get_nth_partition_tuple(
-            const std::vector<LeafSet> &partitions, const size_t n) const;
+    std::tuple<LeafSetPtr, LeafSetPtr> get_nth_partition_tuple(
+            const std::vector<LeafSetPtr> &partitions, const size_t n) const;
 private:
-    boost::dynamic_bitset<> set;
-    
+    bitset set;
 };
 
 /**

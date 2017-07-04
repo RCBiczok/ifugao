@@ -59,12 +59,14 @@ int terraceAnalysis(missingData *m,
         }
     }
 
-    // mapping of leaf IDs to their labels (availably static)
-    LeafLabelMapper::species_names = m->speciesNames;
     // mapping of labels to leaf IDs
+    std::map<const char*, size_t> label_to_leaf_id;
     for (size_t i = 0; i < m->numberOfSpecies; i++) {
-        LeafLabelMapper::label_to_leaf_id[m->speciesNames[i]] = i;
+        label_to_leaf_id[m->speciesNames[i]] = i;
     }
+    
+    // mapping of leaf IDs to their labels (availably static) and vice versa
+    LeafLabelMapper::init_leaf_label_mapper(label_to_leaf_id, m->speciesNames);
     
     ntree_t *nwk_tree = get_newk_tree_from_string(newickTreeString);
     assert(nwk_tree != nullptr);
@@ -81,7 +83,7 @@ int terraceAnalysis(missingData *m,
     std::vector<constraint> constraints =
             extract_constraints_from_supertree(rtree, m);
     
-    BitLeafSet leaf_set(m->numberOfSpecies);
+    LeafSetPtr leaf_set = std::make_unique<BitLeafSet>(m->numberOfSpecies);
     
     size_t num_trees = list_trees(constraints, root_species_id, leaf_set,
                                   allTreesOnTerrace);

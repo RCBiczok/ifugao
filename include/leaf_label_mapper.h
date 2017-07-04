@@ -7,18 +7,15 @@
  */
 class LeafLabelMapper {
 public:
+    static void init_leaf_label_mapper(
+            std::map<const char*, size_t> label_to_leaf_id,
+            char **species_names);
+    
+    static char* get_label_from_leaf_id(const size_t leaf);
+
+    static size_t get_leaf_id_from_label(const char* label);
+    
+//private: TODO
     static std::map<const char*, size_t> label_to_leaf_id;
     static char **species_names;
-
-    static char* get_label_from_leaf_id(const size_t leaf) {
-        assert(species_names != nullptr);
-        
-        return species_names[leaf];
-    };
-
-    static size_t get_leaf_id_from_label(const char* label) {
-        assert(label_to_leaf_id.count(label) == 1);
-        
-        return label_to_leaf_id[label];
-    };
 };

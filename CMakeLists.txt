@@ -41,6 +41,7 @@ set(NEWICK_TOOLS_SRCS
 set(CORE_SRCS
         src/ifugao.cpp
         src/input_parser.cpp
+        src/leaf_label_mapper.cpp
         src/leaf_set.cpp
         src/main.cpp
         src/missing_data.cpp

@@ -19,7 +19,7 @@ struct constraint {
     size_t smaller_right;
     size_t bigger_right;
     
-    constraint();
+    constraint() {};
     
     constraint(size_t smaller_left,
                size_t bigger_left,

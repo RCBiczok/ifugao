@@ -30,11 +30,10 @@ size_t list_trees(const std::vector<constraint> &constraints,
 
 /** Combines all sets (constraints need to be applied already) */
 std::vector<NodePtr> find_all_trees(
-        const LeafSetPtr &leaf_set,
+        const LeafSetPtr leaf_set,
         const std::vector<constraint> &constraints,
         const bool unrooted = false,
         const size_t root_id = 0);
-
 
 /** merges two sub-trees */
 std::vector<NodePtr> merge_subtrees(

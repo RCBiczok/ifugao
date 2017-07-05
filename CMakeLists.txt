@@ -99,22 +99,22 @@ download_project(
         GIT_TAG             master
         UPDATE_DISCONNECTED 1
 )
-add_subdirectory(${googlebenchmark_SOURCE_DIR} ${googlebenchmark_BINARY_DIR} EXCLUDE_FROM_ALL)
-include_directories(SYSTEM "${googlebenchmark_SOURCE_DIR}/include")
+#add_subdirectory(${googlebenchmark_SOURCE_DIR} ${googlebenchmark_BINARY_DIR} EXCLUDE_FROM_ALL)
+#include_directories(SYSTEM "${googlebenchmark_SOURCE_DIR}/include")
 
-include_directories(test)
+#include_directories(test)
 
-set(TEST_HEADERS
-        test/algorithm_test.h
-        test/input_parser_test.h
-        test/terraces_test.h)
+set(TEST_HEADERS )
+#        test/algorithm_test.h
+#        test/input_parser_test.h
+#        test/terraces_test.h)
 
-add_executable(terraces_tests test/gtest.cpp ${CORE_HEADERS} ${TEST_HEADERS})
-set_target_properties(terraces_tests PROPERTIES COMPILE_FLAGS "${TARGET_CXX_FLAGS}")
-target_link_libraries(terraces_tests terraces ${COMMON_LIBRARIEY} gtest gmock)
-add_test(terraces_tests terraces_tests)
+#add_executable(terraces_tests test/gtest.cpp ${CORE_HEADERS} ${TEST_HEADERS})
+#set_target_properties(terraces_tests PROPERTIES COMPILE_FLAGS "${TARGET_CXX_FLAGS}")
+#target_link_libraries(terraces_tests terraces ${COMMON_LIBRARIEY} gtest gmock)
+#add_test(terraces_tests terraces_tests)
 
-add_executable(terraces_benchmarks test/gbenchmark.cpp ${CORE_HEADERS} ${TEST_HEADERS})
-set_target_properties(terraces_benchmarks PROPERTIES COMPILE_FLAGS "${TARGET_CXX_FLAGS}")
-target_link_libraries(terraces_benchmarks terraces ${COMMON_LIBRARIEY} benchmark)
-add_test(terraces_benchmarks terraces_benchmarks)
+#add_executable(terraces_benchmarks test/gbenchmark.cpp ${CORE_HEADERS} ${TEST_HEADERS})
+#set_target_properties(terraces_benchmarks PROPERTIES COMPILE_FLAGS "${TARGET_CXX_FLAGS}")
+#target_link_libraries(terraces_benchmarks terraces ${COMMON_LIBRARIEY} benchmark)
+#add_test(terraces_benchmarks terraces_benchmarks)

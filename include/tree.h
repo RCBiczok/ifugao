@@ -5,9 +5,9 @@
 
 class Node {
 public: 
-    virtual std::string to_newick_string() const;
-    virtual bool is_leaf() const;
-    virtual size_t get_leaf() const;
+    virtual std::string to_newick_string() const = 0;
+    virtual bool is_leaf() const = 0;
+    virtual size_t get_leaf() const = 0;
     
     /**
      * Returns a vector containing all constraints infered from this tree.
@@ -17,7 +17,7 @@ public:
     std::vector<constraint> extract_constraints() const;
     
     virtual std::tuple<size_t, size_t> get_constraints(
-            std::vector<constraint> &constraints) const;
+            std::vector<constraint> &constraints) const = 0;
 };
 
 class Leaf : public Node {

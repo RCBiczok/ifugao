@@ -1,8 +1,57 @@
 #include <limits.h>
+#include <fstream>
+#include <future>
+
+#include "gtest/gtest.h"
 
 #include "terraces.h"
 #include "util.h"
-#include "gtest/gtest.h"
+#include "parameters.h"
+#include "debug.h"
+
+#define TIME_FOR_TESTS 1000*30
+
+typedef TerracesAnalysisTestParameter<const char*> TACountParameter;
+
+class TACountFixture : public ::testing::TestWithParam<TACountParameter> {
+};
+
+class TACheckIfTerraceFixture : public ::testing::TestWithParam<TACountParameter> {
+};
+
+static void test_terrace_analysis(const char *newick_file,
+                                  const char *data_file,
+                                  const int ta_outspec,
+                                  const char *trees_on_terrace) {
+    input_data *read_data = parse_input_data(data_file);
+    assert(read_data != nullptr);
+    char *read_tree = read_newk_tree(newick_file);
+    assert(read_tree != nullptr);
+
+    missingData *m = initializeMissingData(read_data->number_of_species,
+                                           read_data->number_of_partitions,
+                                           const_cast<const char **>(read_data->names));
+    copyDataMatrix(read_data->matrix, m);
+
+    mpz_t terraceSize;
+
+    mpz_init(terraceSize);
+    mpz_set_ui(terraceSize, 0);
+
+    int errorCode = terraceAnalysis(m, read_tree, ta_outspec, nullptr, &terraceSize);
+
+    ASSERT_EQ(errorCode, TERRACE_SUCCESS);
+
+    char *terraceSizeString = nullptr;
+
+    terraceSizeString = mpz_get_str(terraceSizeString, 10, terraceSize);
+
+    ASSERT_STREQ(terraceSizeString, trees_on_terrace);
+
+    free(terraceSizeString);
+
+    freeMissingData(m);
+}
 
 // Test a simple tree file
 TEST(Util, generate_induced_tree) {
@@ -21,23 +70,20 @@ TEST(Util, generate_induced_tree) {
     copyDataMatrix(matrix1, example1);
 
     std::string root_species_name;
-    std::shared_ptr<Tree> r_tree = root_tree(tree, example1, root_species_name);
+    std::vector<std::string> id_to_label;
+    std::shared_ptr<Tree> r_tree = root_tree(tree, example1, root_species_name, id_to_label);
     std::map<std::string, unsigned char> species_map;
     for (unsigned char i = 0; i < example1->numberOfSpecies; i++) {
         species_map[std::string(example1->speciesNames[i])] = i;
     }
 
-    auto part0 = generate_induced_tree(r_tree, example1, species_map, 0);
+    auto part0 = generate_induced_tree(r_tree, example1, species_map, id_to_label, 0);
     ASSERT_TRUE(part0 != nullptr);
-    ASSERT_EQ("s1", part0->right->left->label);
-    ASSERT_EQ("s2", part0->right->right->label);
-    ASSERT_EQ("s3", part0->left->label);
+    ASSERT_EQ(part0->to_newick_string(id_to_label), std::string("(s1,s2);"));
 
-    auto part1 = generate_induced_tree(r_tree, example1, species_map, 1);
+    auto part1 = generate_induced_tree(r_tree, example1, species_map, id_to_label, 1);
     ASSERT_TRUE(part1 != nullptr);
-    ASSERT_EQ("s3", part1->left->label);
-    ASSERT_EQ("s4", part1->right->left->label);
-    ASSERT_EQ("s5", part1->right->right->label);
+    ASSERT_EQ(part1->to_newick_string(id_to_label), std::string("(s4,s5);"));
 
     ntree_destroy(tree);
     freeMissingData(example1);
@@ -60,20 +106,11 @@ TEST(ExtractConstraintsFromSuperTree, example_from_slides) {
     copyDataMatrix(matrix1, example1);
 
     std::string root_species_name;
-    std::shared_ptr<Tree> r_tree = root_tree(tree, example1, root_species_name);
-    auto constraints = extract_constraints_from_supertree(r_tree, example1);
+    std::vector<std::string> id_to_label;
+    std::shared_ptr<Tree> r_tree = root_tree(tree, example1, root_species_name, id_to_label);
+    auto constraints = extract_constraints_from_supertree(r_tree, example1, id_to_label);
 
-    ASSERT_EQ(constraints.size(), 2);
-
-    ASSERT_EQ(constraints[0].smaller_left, "s1");
-    ASSERT_EQ(constraints[0].smaller_right, "s2");
-    ASSERT_EQ(constraints[0].bigger_left, "s3");
-    ASSERT_EQ(constraints[0].bigger_right, "s2");
-
-    ASSERT_EQ(constraints[1].smaller_left, "s4");
-    ASSERT_EQ(constraints[1].smaller_right, "s5");
-    ASSERT_EQ(constraints[1].bigger_left, "s3");
-    ASSERT_EQ(constraints[1].bigger_right, "s5");
+    ASSERT_EQ(constraints.size(), 0);
 
     ntree_destroy(tree);
     freeMissingData(example1);
@@ -95,28 +132,31 @@ TEST(FindAllUnrootedTrees, example_from_slides) {
     copyDataMatrix(matrix1, example1);
 
     std::string root_species_name;
-    std::shared_ptr<Tree> r_tree = root_tree(tree, example1, root_species_name);
-    auto leafs = extract_leaf_labels_from_supertree(r_tree);
-    auto constraints = extract_constraints_from_supertree(r_tree, example1);
+    std::vector<std::string> id_to_label;
+    std::shared_ptr<Tree> r_tree = root_tree(tree, example1, root_species_name, id_to_label);
+    auto leaves = LeafSet::create(id_to_label.size());
+    auto constraints = extract_constraints_from_supertree(r_tree, example1, id_to_label);
 
-    auto result = find_all_unrooted_trees(leafs, constraints, root_species_name);
+    FindAllRootedTrees get_trees;
+    ASSERT_EQ(CountAllRootedTrees().scan_terrace(leaves, constraints), 15);
+    auto result = get_trees.scan_terrace(leaves, constraints);
     ASSERT_EQ(result.size(), 15);
 
-    ASSERT_EQ(result[0]->to_newick_string(), "(s3,((s5,s1),s2),s4);");
-    ASSERT_EQ(result[1]->to_newick_string(), "(s3,(s5,(s2,s1)),s4);");
-    ASSERT_EQ(result[2]->to_newick_string(), "(s3,((s5,s2),s1),s4);");
-    ASSERT_EQ(result[3]->to_newick_string(), "(s3,(s5,s2),(s4,s1));");
-    ASSERT_EQ(result[4]->to_newick_string(), "(s3,((s5,s2),s4),s1);");
-    ASSERT_EQ(result[5]->to_newick_string(), "(s3,(s5,s1),(s4,s2));");
-    ASSERT_EQ(result[6]->to_newick_string(), "(s3,s5,((s4,s1),s2));");
-    ASSERT_EQ(result[7]->to_newick_string(), "(s3,s5,(s4,(s2,s1)));");
-    ASSERT_EQ(result[8]->to_newick_string(), "(s3,s5,((s4,s2),s1));");
-    ASSERT_EQ(result[9]->to_newick_string(), "(s3,(s5,(s4,s2)),s1);");
-    ASSERT_EQ(result[10]->to_newick_string(), "(s3,((s5,s1),s4),s2);");
-    ASSERT_EQ(result[11]->to_newick_string(), "(s3,(s5,(s4,s1)),s2);");
-    ASSERT_EQ(result[12]->to_newick_string(), "(s3,((s5,s4),s1),s2);");
-    ASSERT_EQ(result[13]->to_newick_string(), "(s3,(s5,s4),(s2,s1));");
-    ASSERT_EQ(result[14]->to_newick_string(), "(s3,((s5,s4),s2),s1);");
+    ASSERT_EQ(result[0]->to_newick_string(id_to_label, root_species_name), "(s3,((s5,s1),s2),s4);");
+    ASSERT_EQ(result[1]->to_newick_string(id_to_label, root_species_name), "(s3,(s5,(s2,s1)),s4);");
+    ASSERT_EQ(result[2]->to_newick_string(id_to_label, root_species_name), "(s3,((s5,s2),s1),s4);");
+    ASSERT_EQ(result[3]->to_newick_string(id_to_label, root_species_name), "(s3,(s5,s2),(s4,s1));");
+    ASSERT_EQ(result[4]->to_newick_string(id_to_label, root_species_name), "(s3,((s5,s2),s4),s1);");
+    ASSERT_EQ(result[5]->to_newick_string(id_to_label, root_species_name), "(s3,(s5,s1),(s4,s2));");
+    ASSERT_EQ(result[6]->to_newick_string(id_to_label, root_species_name), "(s3,s5,((s4,s1),s2));");
+    ASSERT_EQ(result[7]->to_newick_string(id_to_label, root_species_name), "(s3,s5,(s4,(s2,s1)));");
+    ASSERT_EQ(result[8]->to_newick_string(id_to_label, root_species_name), "(s3,s5,((s4,s2),s1));");
+    ASSERT_EQ(result[9]->to_newick_string(id_to_label, root_species_name), "(s3,(s5,(s4,s2)),s1);");
+    ASSERT_EQ(result[10]->to_newick_string(id_to_label, root_species_name), "(s3,((s5,s1),s4),s2);");
+    ASSERT_EQ(result[11]->to_newick_string(id_to_label, root_species_name), "(s3,(s5,(s4,s1)),s2);");
+    ASSERT_EQ(result[12]->to_newick_string(id_to_label, root_species_name), "(s3,((s5,s4),s1),s2);");
+    ASSERT_EQ(result[13]->to_newick_string(id_to_label, root_species_name), "(s3,(s5,s4),(s2,s1));");
+    ASSERT_EQ(result[14]->to_newick_string(id_to_label, root_species_name), "(s3,((s5,s4),s2),s1);");
 
     ntree_destroy(tree);
     freeMissingData(example1);
@@ -126,10 +166,6 @@ TEST(TerracesAnalysis, example1_from_old_main) {
     //open some output files for enumerating all trees on a terrace
     FILE *f0 = fopen("tree1", "w");
     FILE *f1 = fopen("tree2", "w");
-
-    //Original: use raw tree as input
-    //char *newickString0 = "((s1,s2),s3,(s4,s5))"; //tree T_0 from Fig 2 in the task specification
-    //char *newickString1 = "((s1,s2),s4,(s3,s5))";  //tree T_1 from Fig 2 in the task sepcification
 
     const char *newickString0 = "((s1,s2),s3,(s4,s5));"; //tree T_0 from Fig 2 in the task specification
     const char *newickString1 = "((s1,s2),s4,(s3,s5));"; //tree T_1 from Fig 2 in the task sepcification
@@ -145,10 +181,13 @@ TEST(TerracesAnalysis, example1_from_old_main) {
                                      1, 0,
                                      1, 1,
                                      0, 1,
-                                     0, 1}, //missing data matrix from example in the task specification
+                                     0, 1}; //missing data matrix from example in the task specification
 
-            matrix2[] = {1, 1, //1st row, species 0 has data for partitions 0 and 1
-                         1, 1, 1, 1, 1, 1, 1, 1}; //no missing data, so there should not be any terraces
+    const unsigned char matrix2[] = {1, 1, //1st row, species 0 has data for partitions 0 and 1
+                                     1, 1,
+                                     1, 1,
+                                     1, 1,
+                                     1, 1}; //no missing data, so there should not be any terraces
 
     //let's initialize some missing data data structures now
     missingData *example1 = initializeMissingData(5, 2, speciesNames);
@@ -190,7 +229,7 @@ TEST(TerracesAnalysis, example1_from_old_main) {
     ASSERT_TRUE(
             (mpz_cmp(terraceSize0, terraceSize1) == 0) && (mpz_cmp_ui(terraceSize0, 15) == 0));
 
-    /*********************************************************************************************************************/
+    /******************************************************************************************************************/
 
     // example calling a matrix with no missing data, hence there are no terraces, or the size of all terraces is 1, or
     // there are 15 unique trees.
@@ -292,4 +331,62 @@ TEST(TerracesAnalysis, example2_from_old_main) {
     freeMissingData(weirdExample);
     fclose(f0);
 }
+
+TEST_P(TACountFixture, ExamplesFromModifiedInput) {
+    auto param = GetParam();
+
+    std::promise<bool> promisedFinished;
+    auto futureResult = promisedFinished.get_future();
+    std::thread([param](std::promise<bool> &finished) {
+        test_terrace_analysis(param.newick_file, param.data_file, TA_COUNT, param.expected_value);
+        finished.set_value(true);
+    }, std::ref(promisedFinished)).detach();
+    EXPECT_TRUE(futureResult.wait_for(std::chrono::milliseconds(TIME_FOR_TESTS))
+                != std::future_status::timeout);
+}
+
+TEST_P(TACheckIfTerraceFixture, ExamplesFromModifiedInput) {
+    auto param = GetParam();
+
+    std::promise<bool> promisedFinished;
+    auto futureResult = promisedFinished.get_future();
+    std::thread([param](std::promise<bool> &finished) {
+        test_terrace_analysis(param.newick_file, param.data_file, TA_DETECT, param.expected_value);
+        finished.set_value(true);
+    }, std::ref(promisedFinished)).detach();
+    EXPECT_TRUE(futureResult.wait_for(std::chrono::milliseconds(TIME_FOR_TESTS))
+                != std::future_status::timeout);
+}
+
+INSTANTIATE_TEST_CASE_P(ModifiedDataInstance, TACountFixture, ::testing::Values(
+    TACountParameter("../input/modified/Meusemann.nwk", "../input/modified/Meusemann.data", "1"),
+    TACountParameter("../input/modified/Allium_Tiny.nwk", "../input/modified/Allium_Tiny.data", "35"),
+    TACountParameter("../input/modified/Asplenium.nwk.1", "../input/modified/Asplenium.data.1", "1"),
+    TACountParameter("../input/modified/Asplenium.nwk.2", "../input/modified/Asplenium.data.2", "95"),
+    TACountParameter("../input/modified/Eucalyptus.nwk.1", "../input/modified/Eucalyptus.data.1", "229"),
+    TACountParameter("../input/modified/Eucalyptus.nwk.1", "../input/modified/Eucalyptus.data.2", "267"),
+    TACountParameter("../input/modified/Eucalyptus.nwk.3", "../input/modified/Eucalyptus.data.3", "9"),
+    TACountParameter("../input/modified/Euphorbia.nwk.1", "../input/modified/Euphorbia.data.1", "759"),
+    TACountParameter("../input/modified/Euphorbia.nwk.2", "../input/modified/Euphorbia.data.2", "759"),
+    TACountParameter("../input/modified/Ficus.nwk.1", "../input/modified/Ficus.data.1", "283815"),
+    TACountParameter("../input/modified/Ficus.nwk.2", "../input/modified/Ficus.data.2", "851445"),
+    TACountParameter("../input/modified/Ficus.nwk.3", "../input/modified/Ficus.data.3", "851445"),
+    TACountParameter("../input/modified/Caryophyllaceae.nwk", "../input/modified/Caryophyllaceae.data", "718346120625")
+));
+
+INSTANTIATE_TEST_CASE_P(ModifiedDataInstance, TACheckIfTerraceFixture, ::testing::Values(
+    TACountParameter("../input/modified/Meusemann.nwk", "../input/modified/Meusemann.data", "0"),
+    TACountParameter("../input/modified/Allium_Tiny.nwk", "../input/modified/Allium_Tiny.data", "2"),
+    TACountParameter("../input/modified/Asplenium.nwk.1", "../input/modified/Asplenium.data.1", "0"),
+    TACountParameter("../input/modified/Asplenium.nwk.2", "../input/modified/Asplenium.data.2", "2"),
+    TACountParameter("../input/modified/Eucalyptus.nwk.1", "../input/modified/Eucalyptus.data.1", "2"),
+    TACountParameter("../input/modified/Eucalyptus.nwk.1", "../input/modified/Eucalyptus.data.2", "2"),
+    TACountParameter("../input/modified/Eucalyptus.nwk.3", "../input/modified/Eucalyptus.data.3", "2"),
+    TACountParameter("../input/modified/Euphorbia.nwk.1", "../input/modified/Euphorbia.data.1", "2"),
+    TACountParameter("../input/modified/Euphorbia.nwk.2", "../input/modified/Euphorbia.data.2", "2"),
+    TACountParameter("../input/modified/Ficus.nwk.1", "../input/modified/Ficus.data.1", "2"),
+    TACountParameter("../input/modified/Ficus.nwk.2", "../input/modified/Ficus.data.2", "2"),
+    TACountParameter("../input/modified/Ficus.nwk.3", "../input/modified/Ficus.data.3", "2"),
+    TACountParameter("../input/modified/Caryophyllaceae.nwk", "../input/modified/Caryophyllaceae.data", "2")
+));
 

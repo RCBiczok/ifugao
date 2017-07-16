@@ -1,19 +1,18 @@
 #include "types/tree.h"
-
+#include "leaf_label_mapper.h"
 #include <sstream>
 #include <map>
 #include "debug.h"
 
 static void to_newick_string_rec(std::stringstream &ss,
-                                 const std::vector<std::string> &ids_to_lables,
                                  const Tree &node) {
 	if(node.is_leaf()) {
-		ss << ids_to_lables[node.id];
+		ss << LeafLabelMapper::get_label_from_leaf_id(node.id);
 	} else {
 		ss << "(";
-		to_newick_string_rec(ss, ids_to_lables, *node.left);
+		to_newick_string_rec(ss, *node.left);
 		ss << ",";
-		to_newick_string_rec(ss, ids_to_lables, *node.right);
+		to_newick_string_rec(ss, *node.right);
 		ss << ")";
 	}
 }
@@ -26,25 +25,24 @@ std::shared_ptr<Tree> root(std::shared_ptr<Tree> t) {
     return root(t->parent.lock());
 }
 
-std::string Tree::to_newick_string(const std::vector<std::string> &ids_to_lables) const {
+std::string Tree::to_newick_string() const {
 	std::stringstream ss;
-	to_newick_string_rec(ss, ids_to_lables, *this);
+	to_newick_string_rec(ss, *this);
 	ss << ";";
 	return ss.str();
 }
 
-std::string Tree::to_newick_string(const std::vector<std::string> &ids_to_lables,
-                                   const std::string &root_label) const {
+std::string Tree::to_newick_string(const size_t root_id) const {
 	std::stringstream ss;
 	ss << "(";
-	ss << root_label;
+	ss << LeafLabelMapper::get_label_from_leaf_id(root_id);
 	ss << ",";
 	if(this->is_leaf()) {
-		ss << ids_to_lables[this->id];
+		ss << LeafLabelMapper::get_label_from_leaf_id(this->id);
 	} else {
-		to_newick_string_rec(ss, ids_to_lables, *this->left);
+		to_newick_string_rec(ss, *this->left);
 		ss << ",";
-		to_newick_string_rec(ss, ids_to_lables, *this->right);
+		to_newick_string_rec(ss, *this->right);
 	}
 	ss << ");";
 	return ss.str();

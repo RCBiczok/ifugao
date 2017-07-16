@@ -55,6 +55,10 @@ static void test_terrace_analysis(const char *newick_file,
 
 // Test a simple tree file
 TEST(Util, generate_induced_tree) {
+//    const char* speciesNames[] =  {(char*)("s1"), (char*)("s2"), (char*)("s3"),
+  //          (char*)("s4"), (char*)("s5")};
+//    missingData *m = initializeMissingData(5, 1, speciesNames);
+    
     ntree_t *tree = get_newk_tree_from_string("((s1,s2),s3,(s4,s5));");
 
     const char *speciesNames[] = {"s1", "s2", "s3", "s4", "s5"};
@@ -68,22 +72,23 @@ TEST(Util, generate_induced_tree) {
     //let's initialize some missing data data structures now
     missingData *example1 = initializeMissingData(5, 2, speciesNames);
     copyDataMatrix(matrix1, example1);
+    LeafLabelMapper::init_leaf_label_mapper(example1);
 
-    std::string root_species_name;
-    std::vector<std::string> id_to_label;
-    std::shared_ptr<Tree> r_tree = root_tree(tree, example1, root_species_name, id_to_label);
+    size_t root_species_id = 3;
+    std::shared_ptr<Tree> r_tree = root_tree(tree, example1, root_species_id);
     std::map<std::string, leaf_number> species_map;
     for (leaf_number i = 0; i < example1->numberOfSpecies; i++) {
         species_map[std::string(example1->speciesNames[i])] = i;
     }
 
-    auto part0 = generate_induced_tree(r_tree, example1, species_map, id_to_label, 0);
-    ASSERT_TRUE(part0 != nullptr);
-    ASSERT_EQ(part0->to_newick_string(id_to_label), std::string("(s1,s2);"));
 
-    auto part1 = generate_induced_tree(r_tree, example1, species_map, id_to_label, 1);
+auto part0 = generate_induced_tree(r_tree, example1, species_map, 0);
+    ASSERT_TRUE(part0 != nullptr);
+    ASSERT_EQ(part0->to_newick_string(), std::string("(s1,s2);"));
+
+    auto part1 = generate_induced_tree(r_tree, example1, species_map, 1);
     ASSERT_TRUE(part1 != nullptr);
-    ASSERT_EQ(part1->to_newick_string(id_to_label), std::string("(s4,s5);"));
+    ASSERT_EQ(part1->to_newick_string(), std::string("(s4,s5);"));
 
     ntree_destroy(tree);
     freeMissingData(example1);
@@ -104,11 +109,11 @@ TEST(ExtractConstraintsFromSuperTree, example_from_slides) {
     //let's initialize some missing data now
     missingData *example1 = initializeMissingData(5, 2, speciesNames);
     copyDataMatrix(matrix1, example1);
+    LeafLabelMapper::init_leaf_label_mapper(example1);
 
-    std::string root_species_name;
-    std::vector<std::string> id_to_label;
-    std::shared_ptr<Tree> r_tree = root_tree(tree, example1, root_species_name, id_to_label);
-    auto constraints = extract_constraints_from_supertree(r_tree, example1, id_to_label);
+    size_t root_species_id = 3;
+    std::shared_ptr<Tree> r_tree = root_tree(tree, example1, root_species_id);
+    auto constraints = extract_constraints_from_supertree(r_tree, example1);
 
     ASSERT_EQ(constraints.size(), 0);
 
@@ -130,33 +135,33 @@ TEST(FindAllUnrootedTrees, example_from_slides) {
     //let's initialize some missing data data structures now
     missingData *example1 = initializeMissingData(5, 2, speciesNames);
     copyDataMatrix(matrix1, example1);
+    LeafLabelMapper::init_leaf_label_mapper(example1);
 
-    std::string root_species_name;
-    std::vector<std::string> id_to_label;
-    std::shared_ptr<Tree> r_tree = root_tree(tree, example1, root_species_name, id_to_label);
-    auto leaves = LeafSet(id_to_label.size());
-    auto constraints = extract_constraints_from_supertree(r_tree, example1, id_to_label);
+    size_t root_species_id = 4; //TODO
+    std::shared_ptr<Tree> r_tree = root_tree(tree, example1, root_species_id);
+    auto leaves = LeafSet(LeafLabelMapper::size());
+    auto constraints = extract_constraints_from_supertree(r_tree, example1);
 
     FindAllRootedTrees get_trees;
     ASSERT_EQ(CountAllRootedTrees().scan_terrace(leaves, constraints), 15);
     auto result = get_trees.scan_terrace(leaves, constraints);
     ASSERT_EQ(result.size(), 15);
 
-    ASSERT_EQ(result[0]->to_newick_string(id_to_label, root_species_name), "(s3,((s5,s1),s2),s4);");
-    ASSERT_EQ(result[1]->to_newick_string(id_to_label, root_species_name), "(s3,(s5,(s2,s1)),s4);");
-    ASSERT_EQ(result[2]->to_newick_string(id_to_label, root_species_name), "(s3,((s5,s2),s1),s4);");
-    ASSERT_EQ(result[3]->to_newick_string(id_to_label, root_species_name), "(s3,(s5,s2),(s4,s1));");
-    ASSERT_EQ(result[4]->to_newick_string(id_to_label, root_species_name), "(s3,((s5,s2),s4),s1);");
-    ASSERT_EQ(result[5]->to_newick_string(id_to_label, root_species_name), "(s3,(s5,s1),(s4,s2));");
-    ASSERT_EQ(result[6]->to_newick_string(id_to_label, root_species_name), "(s3,s5,((s4,s1),s2));");
-    ASSERT_EQ(result[7]->to_newick_string(id_to_label, root_species_name), "(s3,s5,(s4,(s2,s1)));");
-    ASSERT_EQ(result[8]->to_newick_string(id_to_label, root_species_name), "(s3,s5,((s4,s2),s1));");
-    ASSERT_EQ(result[9]->to_newick_string(id_to_label, root_species_name), "(s3,(s5,(s4,s2)),s1);");
-    ASSERT_EQ(result[10]->to_newick_string(id_to_label, root_species_name), "(s3,((s5,s1),s4),s2);");
-    ASSERT_EQ(result[11]->to_newick_string(id_to_label, root_species_name), "(s3,(s5,(s4,s1)),s2);");
-    ASSERT_EQ(result[12]->to_newick_string(id_to_label, root_species_name), "(s3,((s5,s4),s1),s2);");
-    ASSERT_EQ(result[13]->to_newick_string(id_to_label, root_species_name), "(s3,(s5,s4),(s2,s1));");
-    ASSERT_EQ(result[14]->to_newick_string(id_to_label, root_species_name), "(s3,((s5,s4),s2),s1);");
+    ASSERT_EQ(result[0]->to_newick_string(root_species_id), "(s3,((s5,s1),s2),s4);");
+    ASSERT_EQ(result[1]->to_newick_string(root_species_id), "(s3,(s5,(s2,s1)),s4);");
+    ASSERT_EQ(result[2]->to_newick_string(root_species_id), "(s3,((s5,s2),s1),s4);");
+    ASSERT_EQ(result[3]->to_newick_string(root_species_id), "(s3,(s5,s2),(s4,s1));");
+    ASSERT_EQ(result[4]->to_newick_string(root_species_id), "(s3,((s5,s2),s4),s1);");
+    ASSERT_EQ(result[5]->to_newick_string(root_species_id), "(s3,(s5,s1),(s4,s2));");
+    ASSERT_EQ(result[6]->to_newick_string(root_species_id), "(s3,s5,((s4,s1),s2));");
+    ASSERT_EQ(result[7]->to_newick_string(root_species_id), "(s3,s5,(s4,(s2,s1)));");
+    ASSERT_EQ(result[8]->to_newick_string(root_species_id), "(s3,s5,((s4,s2),s1));");
+    ASSERT_EQ(result[9]->to_newick_string(root_species_id), "(s3,(s5,(s4,s2)),s1);");
+    ASSERT_EQ(result[10]->to_newick_string(root_species_id), "(s3,((s5,s1),s4),s2);");
+    ASSERT_EQ(result[11]->to_newick_string(root_species_id), "(s3,(s5,(s4,s1)),s2);");
+    ASSERT_EQ(result[12]->to_newick_string(root_species_id), "(s3,((s5,s4),s1),s2);");
+    ASSERT_EQ(result[13]->to_newick_string(root_species_id), "(s3,(s5,s4),(s2,s1));");
+    ASSERT_EQ(result[14]->to_newick_string(root_species_id), "(s3,((s5,s4),s2),s1);");
 
     ntree_destroy(tree);
     freeMissingData(example1);
@@ -191,6 +196,7 @@ TEST(TerracesAnalysis, example1_from_old_main) {
 
     //let's initialize some missing data data structures now
     missingData *example1 = initializeMissingData(5, 2, speciesNames);
+    LeafLabelMapper::init_leaf_label_mapper(example1);
     missingData *example2 = initializeMissingData(5, 2, speciesNames);
 
     //now copy the missing data matrices to the data structure

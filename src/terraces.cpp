@@ -8,6 +8,7 @@
 #include "terraces.h"
 #include "util.h"
 #include "debug.h"
+#include "leaf_label_mapper.h"
 
 #include <assert.h>
 #include <math.h>
@@ -94,39 +95,42 @@ int terraceAnalysis(missingData *m,
         return TERRACE_OUTPUT_FILE_ERROR;
     }
 
-    ntree_t *tree = get_newk_tree_from_string(newickTreeString);
+    ntree_t *nwk_tree = get_newk_tree_from_string(newickTreeString);
 
-    if(tree == nullptr) {
+    if(nwk_tree == nullptr) {
         // error parsing the newick file
         return TERRACE_NEWICK_ERROR;
     }
-    assert(tree != nullptr);
-
-    short binAndCons = isBinaryAndConsistent(tree, m);
+    
+    LeafLabelMapper::init_leaf_label_mapper(m);
+    
+    short binAndCons = isBinaryAndConsistent(nwk_tree, m);
     if(binAndCons == -1) {
       return TERRACE_TREE_NOT_BINARY_ERROR;
     } else if (binAndCons == -2) {
       return TERRACE_SPECIES_ERROR;
     }
     assert(binAndCons == 0);
+    
+    size_t root_species_id;
+    //TODO bool return value, rtree as out parameter
+    std::shared_ptr<Tree> rtree = root_tree(nwk_tree, m, root_species_id);
 
-    std::string root_species_name;
-    std::vector<std::string> id_to_lable;
-    std::shared_ptr<Tree> rtree = root_tree(tree, m, root_species_name, id_to_lable);
-
+    // nwk_tree is no longer needed [newick-tools]
+    ntree_destroy(nwk_tree);
     //dout(newickTreeString << "\n");
 
     assert(rtree != nullptr);
-    //dout("rooted_tree = " << rtree->to_newick_string(id_to_lable) << "\n");
+    //dout("rooted_tree = " << rtree->to_newick_string() << "\n");
 
     // checking should be done by isBinaryAndConsistent now. commented code is probably unnecassary
     /*std::map<std::string, bool> in_data_file;
-    for (size_t i = 0; i < id_to_lable.size(); i++) {
-        if (m_labels.count(std::string(id_to_lable[i])) == 0) {
-            dout("Species appears in newick file, but not in missing data file:" << id_to_lable[i] << "\n");
+    for (size_t i = 0; i < LeafLabelMapper::size(); i++) {
+        if (m_labels.count(std::string(LeafLabelMapper::get_label_from_leaf_id(i))) == 0) {
+            dout("Species appears in newick file, but not in missing data file:" << LeafLabelMapper::get_label_from_leaf_id(i) << "\n");
             assert(0);
         } else {
-            in_data_file[*m_labels.find(std::string(id_to_lable[i]))] = true;
+            in_data_file[*m_labels.find(std::string(LeafLabelMapper::get_label_from_leaf_id(i)))] = true;
         }
     }
 
@@ -138,15 +142,15 @@ int terraceAnalysis(missingData *m,
         }
     }*/
 
-    auto constraints = extract_constraints_from_supertree(rtree, m, id_to_lable);
+    auto constraints = extract_constraints_from_supertree(rtree, m);
     //dout(constraints << "\n");
-    //dout(extract_constraints_from_supertree(__convert(tree), m) << "\n");
+    //dout(extract_constraints_from_supertree(__convert(nwk_tree), m) << "\n");
 
     //auto r = find_all_rooted_trees(leafs,
     //                               extract_constraints_from_supertree(rtree, m));
     //dout("===== TREES: " << r.size() << "\n");
 
-    auto leaves = LeafSet(id_to_lable.size());
+    auto leaves = LeafSet(LeafLabelMapper::size());
 
     size_t count = 0;
     if(countTrees) {
@@ -160,7 +164,7 @@ int terraceAnalysis(missingData *m,
         auto all_trees = algo.scan_terrace(leaves, constraints);
         count = all_trees.size();
         for (std::shared_ptr<Tree> t : all_trees) {
-            fprintf(allTreesOnTerrace, "%s\n", t->to_newick_string(id_to_lable, root_species_name).c_str());
+            fprintf(allTreesOnTerrace, "%s\n", t->to_newick_string(root_species_id).c_str());
         }
     }
 
@@ -187,7 +191,6 @@ int terraceAnalysis(missingData *m,
      -7: no output file specified
      */
 
-    ntree_destroy(tree);
     return TERRACE_SUCCESS;
 }
 
@@ -291,8 +294,7 @@ unsigned char getDataMatrix(const missingData *m, size_t speciesNumber,
 
 std::vector<constraint> extract_constraints_from_supertree(
         const std::shared_ptr<Tree> supertree,
-        const missingData *missing_data,
-        const std::vector<std::string> &id_to_label) {
+        const missingData *missing_data) {
 
     std::map<std::string, leaf_number> species_map;
     for (leaf_number i = 0; i < missing_data->numberOfSpecies; i++) {
@@ -303,7 +305,7 @@ std::vector<constraint> extract_constraints_from_supertree(
 
     for (size_t i = 0; i < missing_data->numberOfPartitions; i++) {
         auto partition = generate_induced_tree(supertree, missing_data,
-                                               species_map, id_to_label, i);
+                                               species_map, i);
 
         auto constraints = extract_constraints_from_tree(partition);
         //dout(partition << "\n");

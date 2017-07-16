@@ -45,8 +45,8 @@ public:
 		return (left == nullptr && right == nullptr);
 	}
 
-	std::string to_newick_string(const std::vector<std::string> &id_to_lable) const;
-	std::string to_newick_string(const std::vector<std::string> &id_to_lable, const std::string &root_label) const;
+	std::string to_newick_string() const;
+	std::string to_newick_string(const size_t root_id) const;
 
     template<typename T>
     using TreeNodeVisitor = T (*)(const Tree*);

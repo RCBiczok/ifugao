@@ -11,9 +11,11 @@ std::shared_ptr<Tree> generate_induced_tree(const std::shared_ptr<Tree> tree,
     }
 
     if (tree->is_leaf()) {
-        if (species_map.count(LeafLabelMapper::get_label_from_leaf_id(tree->id)) == 1
-            && getDataMatrix(missing_data, species_map.at(LeafLabelMapper::get_label_from_leaf_id(tree->id)),
-                             partition)) {
+        if (1 == species_map.count(
+            LeafLabelMapper::get_label_from_leaf_id(tree->id))
+            && getDataMatrix(missing_data, species_map.at(
+                LeafLabelMapper::get_label_from_leaf_id(tree->id)), partition))
+        {
             auto leave = std::make_shared<Tree>();
             leave->id = tree->id;
             leave->left = nullptr;
@@ -26,8 +28,8 @@ std::shared_ptr<Tree> generate_induced_tree(const std::shared_ptr<Tree> tree,
         auto left = generate_induced_tree(tree->left, missing_data, species_map,
                                           partition);
         assert(tree->right != nullptr);
-        auto right = generate_induced_tree(tree->right, missing_data, species_map,
-                                           partition);
+        auto right = generate_induced_tree(tree->right, missing_data,
+                                           species_map, partition);
         //Left and right subtrees are included -> common ancestor is included
         if (left != nullptr && right != nullptr) {
             auto inner_node = std::make_shared<Tree>();
@@ -156,7 +158,8 @@ void recursive_root(std::shared_ptr<Tree> current, ntree_t *current_ntree,
 
     if (current_ntree->children_count == 0) {   //is leaf
         // set ID for leaf
-        current->id = LeafLabelMapper::get_leaf_id_from_label(current_ntree->label);
+        current->id =
+                LeafLabelMapper::get_leaf_id_from_label(current_ntree->label);
         return;
     }
 

@@ -54,12 +54,11 @@ TEST(get_leaf_by_name_Test, simiple_test) {
 
 TEST(Root_at_Test, simple_tree) {
     const char* speciesNames[] = 
-            {(char*)("A"), (char*)("B"), (char*)("C"), (char*)("D") };
+            {(char*)("A"), (char*)("B"), (char*)("C"), (char*)("D")};
     missingData *m = initializeMissingData(4, 1, speciesNames);
     LeafLabelMapper::init_leaf_label_mapper(m);
     
     ntree_t *tree = get_newk_tree_from_string("(A,B,(C,D));");
-    
     
     ASSERT_TRUE(check_tree(tree));
     ntree_t* leaf = get_leaf_by_name(tree, "D");
@@ -78,7 +77,7 @@ TEST(Root_at_Test, simple_tree) {
 
 TEST(Tree_root_Test, simple_tree) {
     const char* speciesNames[] = 
-            {(char*)("A"), (char*)("B"), (char*)("C"), (char*)("D") };
+            {(char*)("A"), (char*)("B"), (char*)("C"), (char*)("D")};
     missingData *m = initializeMissingData(4, 1, speciesNames);
     LeafLabelMapper::init_leaf_label_mapper(m);
     

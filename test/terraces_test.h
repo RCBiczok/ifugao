@@ -55,13 +55,11 @@ static void test_terrace_analysis(const char *newick_file,
 
 // Test a simple tree file
 TEST(Util, generate_induced_tree) {
-//    const char* speciesNames[] =  {(char*)("s1"), (char*)("s2"), (char*)("s3"),
-  //          (char*)("s4"), (char*)("s5")};
-//    missingData *m = initializeMissingData(5, 1, speciesNames);
-    
     ntree_t *tree = get_newk_tree_from_string("((s1,s2),s3,(s4,s5));");
 
     const char *speciesNames[] = {"s1", "s2", "s3", "s4", "s5"};
+//    const char* speciesNames[] =  {(char*)("s1"), (char*)("s2"), (char*)("s3"),
+  //          (char*)("s4"), (char*)("s5")};
 
     const unsigned char matrix1[] = {1, 0,
                                      1, 0,
@@ -81,8 +79,7 @@ TEST(Util, generate_induced_tree) {
         species_map[std::string(example1->speciesNames[i])] = i;
     }
 
-
-auto part0 = generate_induced_tree(r_tree, example1, species_map, 0);
+    auto part0 = generate_induced_tree(r_tree, example1, species_map, 0);
     ASSERT_TRUE(part0 != nullptr);
     ASSERT_EQ(part0->to_newick_string(), std::string("(s1,s2);"));
 

@@ -102,8 +102,6 @@ int terraceAnalysis(missingData *m,
         return TERRACE_NEWICK_ERROR;
     }
     
-    LeafLabelMapper::init_leaf_label_mapper(m);
-    
     short binAndCons = isBinaryAndConsistent(nwk_tree, m);
     if(binAndCons == -1) {
       return TERRACE_TREE_NOT_BINARY_ERROR;
@@ -111,6 +109,9 @@ int terraceAnalysis(missingData *m,
       return TERRACE_SPECIES_ERROR;
     }
     assert(binAndCons == 0);
+    
+    // init LeafLabelMapper, to be able to get labels from IDs and vice versa
+    LeafLabelMapper::init_leaf_label_mapper(m);
     
     size_t root_species_id;
     //TODO bool return value, rtree as out parameter
@@ -122,25 +123,6 @@ int terraceAnalysis(missingData *m,
 
     assert(rtree != nullptr);
     //dout("rooted_tree = " << rtree->to_newick_string() << "\n");
-
-    // checking should be done by isBinaryAndConsistent now. commented code is probably unnecassary
-    /*std::map<std::string, bool> in_data_file;
-    for (size_t i = 0; i < LeafLabelMapper::size(); i++) {
-        if (m_labels.count(std::string(LeafLabelMapper::get_label_from_leaf_id(i))) == 0) {
-            dout("Species appears in newick file, but not in missing data file:" << LeafLabelMapper::get_label_from_leaf_id(i) << "\n");
-            assert(0);
-        } else {
-            in_data_file[*m_labels.find(std::string(LeafLabelMapper::get_label_from_leaf_id(i)))] = true;
-        }
-    }
-
-    in_data_file[root_species_name] = true;
-    for (auto &m_label : m_labels) {
-        if(!in_data_file[m_label]) {
-            dout("Species appears in missing data file, but not in newick file:" << m_label << "\n");
-            assert(0);
-        }
-    }*/
 
     auto constraints = extract_constraints_from_supertree(rtree, m);
     //dout(constraints << "\n");

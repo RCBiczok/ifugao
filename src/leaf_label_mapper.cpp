@@ -2,19 +2,25 @@
 
 std::map<const char*, size_t, label_compare> LeafLabelMapper::label_to_leaf_id;
 char **LeafLabelMapper::species_names = nullptr;
+bool LeafLabelMapper::already_init = false;
 
 void LeafLabelMapper::init_leaf_label_mapper(const missingData *m) {
-    static bool already_init = false;
-    
     if(!already_init) {
         for (size_t i = 0; i < m->numberOfSpecies; i++) {
             label_to_leaf_id[m->speciesNames[i]] = i;
         }
         species_names = m->speciesNames;
+        already_init = true;
     } else {
         // only init once ever
         assert(false);
     }
+}
+
+void LeafLabelMapper::deinit_leaf_label_mapper() {
+    label_to_leaf_id.clear();
+    species_names = nullptr;
+    already_init = false;
 }
 
 char* LeafLabelMapper::get_label_from_leaf_id(const size_t leaf) {

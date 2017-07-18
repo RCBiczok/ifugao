@@ -196,11 +196,10 @@ public:
                     index_containing_right_constraint = i;
                 }
             }
-            assert(found_left_constraint
-                    && index_containing_left_constraint < list_of_partitions.size());
-            assert(
-                    found_right_constraint
-                    && index_containing_right_constraint < list_of_partitions.size());
+            assert(found_left_constraint);
+            assert(index_containing_left_constraint < list_of_partitions.size());
+            assert(found_right_constraint);
+            assert(index_containing_right_constraint < list_of_partitions.size());
             if (index_containing_left_constraint != index_containing_right_constraint) {
                 // sets need to be merged
                 list_of_partitions[index_containing_left_constraint]->merge(*list_of_partitions[index_containing_right_constraint]);
@@ -224,7 +223,7 @@ private:
 
         leaf_number pos = this->find_first();
         while (pos != npos) {
-            // create an empty set for each leave
+            // create an empty set for each leaf
             auto set = std::make_shared<BitLeafSet>(boost::dynamic_bitset<>::size(), 0);
             set->insert(pos);
             sets.push_back(set);

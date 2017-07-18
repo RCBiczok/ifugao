@@ -229,8 +229,8 @@ TEST(TerracesAnalysis, example1_from_old_main) {
     ASSERT_EQ(errorCode, TERRACE_SUCCESS);
 
     //the terraces for example input trees 0 and 1 must be of the same size and equal to 15
-    ASSERT_TRUE(
-            (mpz_cmp(terraceSize0, terraceSize1) == 0) && (mpz_cmp_ui(terraceSize0, 15) == 0));
+    ASSERT_TRUE(mpz_cmp(terraceSize0, terraceSize1) == 0);
+    ASSERT_TRUE(mpz_cmp_ui(terraceSize0, 15) == 0);
 
     /******************************************************************************************************************/
 
@@ -247,8 +247,8 @@ TEST(TerracesAnalysis, example1_from_old_main) {
     ASSERT_EQ(errorCode, TERRACE_SUCCESS);
 
     //terrace size for both trees must be 1
-    ASSERT_TRUE(
-            (mpz_cmp(terraceSize0, terraceSize1) == 0) && (mpz_cmp_ui(terraceSize0, 1) == 0));
+    ASSERT_TRUE(mpz_cmp(terraceSize0, terraceSize1) == 0);
+    ASSERT_TRUE(mpz_cmp_ui(terraceSize0, 1) == 0);
 
     freeMissingData(example1);
     freeMissingData(example2);

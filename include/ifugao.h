@@ -6,17 +6,6 @@
 #include <iostream>
 #include <iterator>
 
-/**
- * Method calling overview:
- * 
- *  list_trees
- *    combine_sets
- *      [recursion stop]
- *        get_all_binary_trees
- *      apply_constraints
- *   d_print_tree
- */
-
 template<typename T>
 std::ostream& operator<<(std::ostream &strm, const std::set<T>& set) {
     strm << "{";
@@ -119,14 +108,13 @@ public:
     virtual ~TerraceAlgorithm() = default;
 
     T scan_terrace(LeafSet &leaves, const std::vector<constraint> &constraints) {
-
         if (constraints.empty()) {
-            auto result = scan_unconstraint_leaves(leaves);
-            return result;
+            return scan_unconstraint_leaves(leaves);
+        } else {
+            return traverse_partitions(constraints, leaves);
         }
-
-        return traverse_partitions(constraints, leaves);
     }
+
 protected:
     inline
     virtual T traverse_partitions(const std::vector<constraint> &constraints,
@@ -197,6 +185,7 @@ protected:
     }
     inline
     size_t scan_unconstraint_leaves(LeafSet &leaves) {
+        // formula to count all trees is ((2n-5)!)!
         size_t result = 1;
         for(size_t i = 4; i <= (leaves.size() + 1); i++) {
             result *= (2*i-5);

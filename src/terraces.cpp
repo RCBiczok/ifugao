@@ -110,7 +110,8 @@ int terraceAnalysis(missingData *m,
     }
     assert(binAndCons == 0);
     
-    // init LeafLabelMapper, to be able to get labels from IDs and vice versa
+    // (re-)init LeafLabelMapper, used to get labels from IDs and vice versa
+    LeafLabelMapper::deinit_leaf_label_mapper();
     LeafLabelMapper::init_leaf_label_mapper(m);
     
     size_t root_species_id;
@@ -171,7 +172,7 @@ int terraceAnalysis(missingData *m,
      -6: reserved for something you must think about anyway (tree can't be rooted)
      -7: no output file specified
      */
-
+    LeafLabelMapper::deinit_leaf_label_mapper();
     return TERRACE_SUCCESS;
 }
 

@@ -70,6 +70,7 @@ TEST(Util, generate_induced_tree) {
     //let's initialize some missing data data structures now
     missingData *example1 = initializeMissingData(5, 2, speciesNames);
     copyDataMatrix(matrix1, example1);
+    LeafLabelMapper::deinit_leaf_label_mapper();
     LeafLabelMapper::init_leaf_label_mapper(example1);
 
     size_t root_species_id = 3;
@@ -106,6 +107,7 @@ TEST(ExtractConstraintsFromSuperTree, example_from_slides) {
     //let's initialize some missing data now
     missingData *example1 = initializeMissingData(5, 2, speciesNames);
     copyDataMatrix(matrix1, example1);
+    LeafLabelMapper::deinit_leaf_label_mapper();
     LeafLabelMapper::init_leaf_label_mapper(example1);
 
     size_t root_species_id = 3;
@@ -113,7 +115,7 @@ TEST(ExtractConstraintsFromSuperTree, example_from_slides) {
     auto constraints = extract_constraints_from_supertree(r_tree, example1);
 
     ASSERT_EQ(constraints.size(), 0);
-
+    
     ntree_destroy(tree);
     freeMissingData(example1);
 }
@@ -132,6 +134,7 @@ TEST(FindAllUnrootedTrees, example_from_slides) {
     //let's initialize some missing data data structures now
     missingData *example1 = initializeMissingData(5, 2, speciesNames);
     copyDataMatrix(matrix1, example1);
+    LeafLabelMapper::deinit_leaf_label_mapper();
     LeafLabelMapper::init_leaf_label_mapper(example1);
 
     size_t root_species_id = 4; //TODO
@@ -193,7 +196,6 @@ TEST(TerracesAnalysis, example1_from_old_main) {
 
     //let's initialize some missing data data structures now
     missingData *example1 = initializeMissingData(5, 2, speciesNames);
-    LeafLabelMapper::init_leaf_label_mapper(example1);
     missingData *example2 = initializeMissingData(5, 2, speciesNames);
 
     //now copy the missing data matrices to the data structure
@@ -212,7 +214,6 @@ TEST(TerracesAnalysis, example1_from_old_main) {
 
     //error code, return value of the function you shall implement
     int errorCode;
-
     //now let's calculate terraces for example 1
     errorCode = terraceAnalysis(example1, newickString0,
                                 TA_COUNT + TA_ENUMERATE,

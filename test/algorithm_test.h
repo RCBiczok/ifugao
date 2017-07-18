@@ -26,6 +26,7 @@ static void test_rooted_trees(const char *newick_file, const char *data_file, lo
                                            read_data->number_of_partitions,
                                            const_cast<const char **>(read_data->names));
     copyDataMatrix(read_data->matrix, m);
+    LeafLabelMapper::deinit_leaf_label_mapper();
     LeafLabelMapper::init_leaf_label_mapper(m);
 
     for(auto &root_species_name : get_root_species(m)) {
@@ -138,6 +139,7 @@ TEST(ApplyConstraintsTest, no_merges) {
 TEST(GetAllBinaryTrees, with_tree_leaves) {
     const char* speciesNames[] = {(char*)("1"), (char*)("2"), (char*)("3")};
     missingData *m = initializeMissingData(3, 1, speciesNames);
+    LeafLabelMapper::deinit_leaf_label_mapper();
     LeafLabelMapper::init_leaf_label_mapper(m);
     
     LeafSet leaves = {0, 1, 2};
@@ -149,12 +151,14 @@ TEST(GetAllBinaryTrees, with_tree_leaves) {
     ASSERT_EQ(result[0]->to_newick_string(), "((3,1),2);");
     ASSERT_EQ(result[1]->to_newick_string(), "(3,(2,1));");
     ASSERT_EQ(result[2]->to_newick_string(), "((3,2),1);");
+    
 }
 
 TEST(GetAllBinaryTrees, with_four_leaves) {
     const char* speciesNames[] = {(char*)("1"), (char*)("2"), (char*)("3"),
                                   (char*)("4")};
     missingData *m = initializeMissingData(4, 1, speciesNames);
+    LeafLabelMapper::deinit_leaf_label_mapper();
     LeafLabelMapper::init_leaf_label_mapper(m);
     
     LeafSet leaves = {0, 1, 2, 3};
@@ -325,6 +329,7 @@ TEST(FindAllRootedTrees, example_from_slides) {
     const char* speciesNames[] = {(char*)("1"), (char*)("2"), (char*)("3"),
                                   (char*)("4"), (char*)("5")};
     missingData *m = initializeMissingData(5, 1, speciesNames);
+    LeafLabelMapper::deinit_leaf_label_mapper();
     LeafLabelMapper::init_leaf_label_mapper(m);
     
     LeafSet leaves = {0, 1, 2, 3, 4};
@@ -355,6 +360,7 @@ TEST(FindAllRootedTrees, example_from_slides) {
 TEST(FindConstraintsTest, example_from_slides) {
     const char* speciesNames[] = {(char*)("1"), (char*)("2"), (char*)("3")};
     missingData *m = initializeMissingData(3, 1, speciesNames);
+    LeafLabelMapper::deinit_leaf_label_mapper();
     LeafLabelMapper::init_leaf_label_mapper(m);
     
     LeafSet leaves = {1, 2, 3};

@@ -132,7 +132,7 @@ int terraceAnalysis(missingData *m,
     //auto r = find_all_rooted_trees(leafs,
     //                               extract_constraints_from_supertree(rtree, m));
     //dout("===== TREES: " << r.size() << "\n");
-    auto leaves = LeafSet(LeafLabelMapper::size());
+    auto leaves = LeafSet(LeafLabelMapper::size() - 1); // -1 to ignore the root
 
     mpz_class count = 0;
     if(countTrees) {

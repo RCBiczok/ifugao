@@ -61,7 +61,7 @@ static void test_rooted_trees(const char *newick_file, const char *data_file, lo
             }
         }
 
-        auto leaves = LeafSet(LeafLabelMapper::size());
+        auto leaves = LeafSet(LeafLabelMapper::size() - 1); //-1 to ignore root
 
         CountAllRootedTrees algo;
         auto result = algo.scan_terrace(leaves, extract_constraints_from_supertree(rtree, m));

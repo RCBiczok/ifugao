@@ -139,7 +139,7 @@ TEST(FindAllUnrootedTrees, example_from_slides) {
 
     size_t root_species_id = 4; //TODO
     std::shared_ptr<Tree> r_tree = root_tree(tree, example1, root_species_id);
-    auto leaves = LeafSet(LeafLabelMapper::size());
+    auto leaves = LeafSet(LeafLabelMapper::size() - 1); // -1 to ignore root
     auto constraints = extract_constraints_from_supertree(r_tree, example1);
 
     FindAllRootedTrees get_trees;

@@ -77,6 +77,7 @@ public:
         if (constraints.empty()) {
             return scan_unconstraint_leaves(leaves);
         } else {
+            leaves.apply_constraints(constraints);
             return traverse_partitions(constraints, leaves);
         }
     }

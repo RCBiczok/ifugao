@@ -5,6 +5,8 @@
 #include <iterator>
 #include <gmpxx.h>
 
+#define THRESHOLD 10
+
 /* TODO UNUSED
 template<typename T>
 std::ostream& operator<<(std::ostream &strm, const std::set<T>& set) {
@@ -67,6 +69,39 @@ inline std::vector<constraint> extract_constraints_from_tree(
 std::vector<constraint> find_constraints(const LeafSet &leaves,
                                          const std::vector<constraint> &constraints);
 
+static size_t binary_search(const std::vector<leaf_number> &vec, size_t start, size_t end, const leaf_number &key) {
+        // Termination condition: start index greater than end index
+        if(start > end) {
+            return -1;
+        }
+
+        // Find the middle element of the vector and use that for splitting
+        // the array into two pieces.
+        const int middle = start + ((end - start) / 2);
+
+        if(vec[middle] == key) {
+            return middle;
+        } else if(vec[middle] > key) {
+            return binary_search(vec, start, middle - 1, key);
+        }
+        return binary_search(vec, middle + 1, end, key);
+    }
+
+static leaf_number map_to_new_leaf_number(const std::vector<leaf_number> &mapping, const leaf_number &leaf) {
+    return binary_search(mapping, 0, mapping.size() - 1, leaf);
+}
+
+static std::vector<constraint> update_constraints(const std::vector<leaf_number> &mapping, const std::vector<constraint> &constraints) {
+    std::vector<constraint> updated_constraints;
+    // TODO: can mapping to new constraints be done more efficiently??
+    for (size_t i = 0; i < constraints.size(); i++) {
+        constraint new_constraint (map_to_new_leaf_number(mapping, constraints[i].smaller_left),
+                                    map_to_new_leaf_number(mapping, constraints[i].smaller_right),
+                                    map_to_new_leaf_number(mapping, constraints[i].bigger));
+        updated_constraints.push_back(new_constraint);
+    }
+    return updated_constraints;
+}
 
 template <typename T>
 class TerraceAlgorithm {
@@ -98,6 +133,17 @@ protected:
 
             auto constraints_left = find_constraints(*part_left, constraints);
             auto constraints_right = find_constraints(*part_right, constraints);
+
+            // compress left part?
+            if(part_left->compressing_worth() && (constraints_left.size() > THRESHOLD)) {
+                std::vector<leaf_number> mapping = part_left->compress();
+                constraints_left = update_constraints(mapping, constraints_left);
+            }
+            // compress right part?
+            if(part_right->compressing_worth() && (constraints_right.size() > THRESHOLD)) {
+                std::vector<leaf_number> mapping = part_right->compress();
+                constraints_right = update_constraints(mapping, constraints_right);
+            }
 
             auto subtrees_left = scan_terrace(*part_left,
                                                        constraints_left);
@@ -185,7 +231,7 @@ protected:
     inline
     TreeList scan_unconstraint_leaves(LeafSet &leaves, bool unrooted = false) {
         TreeList binary_trees = get_all_binary_trees(leaves);
-        
+
         if(unrooted) {
             for (size_t i = 0; i < binary_trees.size() ; ++i) {
                 const auto inner =
@@ -193,7 +239,7 @@ protected:
                 binary_trees[i] = std::make_shared<UnrootedNode>(inner);
             }
         }
-        
+
         return binary_trees;
     }
 

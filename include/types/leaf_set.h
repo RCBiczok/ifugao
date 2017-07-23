@@ -26,13 +26,58 @@ inline bool is_bit_set(size_t num, size_t n) {
 template <class LSClass>
 class AbstractLeafSet {
 public:
-    AbstractLeafSet() = default;
+    AbstractLeafSet() {
+        compressed = false;
+    };
     AbstractLeafSet(const AbstractLeafSet&) = default;
     virtual ~AbstractLeafSet() = default;
     virtual bool contains(const size_t leaf) const = 0;
     virtual size_t size() const = 0;
-    virtual leaf_number pop() = 0;
+    leaf_number pop() {
+        if(!this->compressed) {
+            return this->pop_normal();
+        } else {
+            return this->mapping[this->pop_normal()];
+        }
+    }
+    virtual leaf_number pop_normal() = 0;
     virtual void merge(const LSClass &other) = 0;
+    virtual bool compressing_worth() const {
+        return false;
+    }
+    std::vector<leaf_number> compress() {
+        assert(compressing_worth());
+        std::vector<leaf_number> new_mapping;
+        for (size_t i = 0; i < this->capacity(); i++) {
+            if(this->contains(i)) {
+                new_mapping.push_back(i);
+            }
+        }
+        assert(new_mapping.size() == this->size());
+        this->resize_and_fill(size());
+        if(this->compressed) {
+            // LeafSet was already compressed; update mapping
+            for (size_t i = 0; i < new_mapping.size(); i++) {
+                assert(new_mapping[i] < this->mapping.size());
+                new_mapping[i] = this->mapping[new_mapping[i]];
+            }
+        }
+        this->mapping = new_mapping;
+        return this->mapping;
+    }
+private:
+    std::vector<leaf_number> mapping;
+    bool compressed;
+    virtual void resize_and_fill(size_t capacity) {
+        // should never be called
+        assert(false);
+        return;
+    }
+    virtual size_t capacity() const {
+        // should never be called
+        assert(false);
+        return 0;
+    }
 };
 
 //TODO SimpleLeafSet aufs neue Interface anpassen
@@ -84,7 +129,7 @@ public:
         return std::make_shared<SimpleLeafSet>();
     }
     inline
-    leaf_number pop() {
+    leaf_number pop_normal() {
         auto itr = this->begin();
         auto first_elem = *itr;
         this->erase(itr);
@@ -95,6 +140,7 @@ public:
         std::set<leaf_number>::insert(other.begin(), other.end());
     }
 };
+
 
 class BitLeafSet : public AbstractLeafSet<BitLeafSet>, boost::dynamic_bitset<> {
     typedef std::vector<std::shared_ptr<BitLeafSet>> partition_list;
@@ -137,7 +183,7 @@ public:
     }
 
     inline
-    leaf_number pop() {
+    leaf_number pop_normal() {
         leaf_number pos = this->find_first();
         (*this)[pos] = false;
         return pos;
@@ -219,7 +265,10 @@ public:
     const partition_list& get_list_of_partitions() const {
         return list_of_partitions;
     }
-
+    inline
+    bool compressing_worth() const {
+        return (64 * this->size()) < this->capacity();
+    }
 private:
     partition_list list_of_partitions;
 
@@ -248,6 +297,15 @@ private:
     void merge(const BitLeafSet  &other) {
         boost::dynamic_bitset<>::operator|=(other);
     }
+    inline
+    void resize_and_fill(size_t capacity) {
+        this->resize(capacity, 1);
+        this->set();
+    }
+    inline
+    size_t capacity() const {
+        return boost::dynamic_bitset<>::size();
+    };
 };
 
 
@@ -336,7 +394,7 @@ public:
         return set;
     }
 
-    inline leaf_number pop() {
+    inline leaf_number pop_normal() {
         assert(repr != invalid_entry);
         assert(repr_valid);
 
@@ -350,7 +408,7 @@ public:
 
         //this is needed to make sure the chain of parent pointers is not broken, if we delete elements
         //this works, because find has path compression and sets the parent to the representative
-        //TODO we dont have to do this for every call of pop(). We can do this once and remember that we already did it.
+        //TODO we dont have to do this for every call of pop_normal(). We can do this once and remember that we already did it.
         //  but we would have to be careful to forget it, e.g. if we merge to sets.
         for (size_t i = 0; i < data_structure->size(); i++) {
             data_structure->find(i);
@@ -486,6 +544,7 @@ private:
     size_t repr; //this is the number of the representative of this set. its an index to the array of the union find data structure
     bool repr_valid = false; //true iff the representative is valid
     std::vector<leaf_number> list_of_partitions;  //contains the id's of the representatives of the sets
+
 
 //    void merge(const UnionFindLeafSet &other) {
 //        assert(repr_valid && other.repr_valid);

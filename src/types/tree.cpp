@@ -12,8 +12,9 @@ std::string Node::to_newick_string(const label_mapper &id_to_label) const {
 
 std::vector<constraint> Node::extract_constraints() const {
     std::vector<constraint> constraints;
-    
-    this->get_constraints(constraints);
+    if (!this->is_leaf()) {
+        this->get_constraints(constraints);
+    }
     
     return constraints;
 }
@@ -29,15 +30,6 @@ void Leaf::to_newick_string(std::stringstream &ss,
 /*************************/
 /*** InnerNode methods ***/
 /*************************/
-void InnerNode::to_newick_string(std::stringstream &ss,
-                                 const label_mapper &id_to_label) const {
-    ss << "(";
-    this->left->to_newick_string(ss, id_to_label);
-    ss << ",";
-    this->right->to_newick_string(ss, id_to_label);
-    ss << ")";
-}
-
 std::tuple<leaf_number, leaf_number> InnerNode::get_constraints(
         std::vector<constraint> &constraints) const {
     leaf_number left_most_leaf;
@@ -87,16 +79,31 @@ std::tuple<leaf_number, leaf_number> InnerNode::get_constraints(
     return std::make_tuple(left_most_leaf, right_most_leaf);
 }
 
+void InnerNode::to_newick_string(std::stringstream &ss,
+                                 const label_mapper &id_to_label) const {
+    ss << "(";
+    this->left->to_newick_string(ss, id_to_label);
+    ss << ",";
+    this->right->to_newick_string(ss, id_to_label);
+    ss << ")";
+}
+
+void InnerNode::to_newick_string_with_root(
+        std::stringstream &ss, const label_mapper &id_to_label) const {
+    ss << "(" << id_to_label.root_label << ",";
+    this->left->to_newick_string(ss, id_to_label);
+    ss << ",";
+    this->right->to_newick_string(ss, id_to_label);
+    ss << ")";
+}
+
+
 /****************************/
 /*** UnrootedNode methods ***/
 /****************************/
 void UnrootedNode::to_newick_string(std::stringstream &ss,
                                     const label_mapper &id_to_label) const {
-    ss << "(" << id_to_label.root_label << ",";
-    this->inner->left->to_newick_string(ss, id_to_label);
-    ss << ",";
-    this->inner->right->to_newick_string(ss, id_to_label);
-    ss << ")";
+    this->node->to_newick_string_with_root(ss, id_to_label);
 }
 
 /***************************************/
@@ -120,28 +127,31 @@ void AllLeafCombinationsNode::to_newick_string(
     }
 }
 
+void AllLeafCombinationsNode::to_newick_string_with_root(
+        std::stringstream &ss, const label_mapper &id_to_label) const {
+    ss << "(" << id_to_label.root_label << ",";
+    this->to_newick_string(ss, id_to_label);
+    ss << ")";
+}
+
 /***************************************/
 /*** AllTreeCombinationsNode methods ***/
 /***************************************/
 void AllTreeCombinationsNode::to_newick_string(
         std::stringstream &ss, const label_mapper &id_to_label) const {
-    if (this->trees.size() == 0) {
-        return; // this can happen if initialized empty
-    }
-    this->trees[0]->to_newick_string(ss, id_to_label);
-    for (size_t i = 1; i < this->trees.size(); ++i) {
+    this->nodes[0]->to_newick_string(ss, id_to_label);
+    for (size_t i = 1; i < this->nodes.size(); ++i) {
         ss << "|";
-        this->trees[i]->to_newick_string(ss, id_to_label);
+        this->nodes[i]->to_newick_string(ss, id_to_label);
     }
 }
 
-/****************************************/
-/*** UnrootedCombinationsNode methods ***/
-/****************************************/
-void UnrootedCombinationsNode::to_newick_string(
+void AllTreeCombinationsNode::to_newick_string_with_root(
         std::stringstream &ss, const label_mapper &id_to_label) const {
-    ss << "(" << id_to_label.root_label << ",";
-    this->combinations->to_newick_string(ss, id_to_label);
-    ss << ")";
+    this->nodes[0]->to_newick_string_with_root(ss, id_to_label);
+    for (size_t i = 1; i < this->nodes.size(); ++i) {
+        ss << "|";
+        this->nodes[i]->to_newick_string_with_root(ss, id_to_label);
+    }
 }
 

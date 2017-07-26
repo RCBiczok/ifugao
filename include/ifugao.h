@@ -4,6 +4,9 @@
 #include <iostream>
 #include <iterator>
 #include <gmpxx.h>
+#include <omp.h>
+
+#define PARALLEL_THRESHOLD 20
 
 /**
  * Returns a vector containing all constraints that still are valid for the given set of leaves.
@@ -28,25 +31,34 @@ public:
             return scan_unconstraint_leaves(leaves, unrooted);
         } else {
             leaves.apply_constraints(constraints);
-            return traverse_partitions(constraints, leaves, unrooted);
+            if (leaves.size() > PARALLEL_THRESHOLD) {
+                return traverse_partitions_parallel(constraints, leaves, unrooted);
+            } else {
+                return traverse_partitions(constraints, leaves, unrooted);
+            }
         }
     }
 
 protected:
+    ResultType scan_terrace_internal(LeafSet &leaves,
+                                     const std::vector<constraint> &constraints,
+                                     bool unrooted = false) {
+        if (constraints.empty()) {
+            return scan_unconstraint_leaves(leaves, unrooted);
+        } else {
+            leaves.apply_constraints(constraints);
+            return traverse_partitions(constraints, leaves, unrooted);
+        }
+    }
+
     inline
     virtual ResultType traverse_partitions(const std::vector<constraint> &constraints,
                                            LeafSet &leaves,
                                            bool unrooted = false) {
         CollectType aggregation = initialize_collect_type();
-        //bool cont = true; // variable indicating whether to continue or not
+        bool cont = true; // variable indicating whether to continue or not
         
-        int depth = 0;
-        depth++;
-
-        size_t loop_max = leaves.number_partition_tuples();
-        //std::vector<ResultType> results(loop_max);
-#pragma omp parallel for if(depth==1)
-        for (size_t i = 1; i <= loop_max; i++) {
+        for (size_t i = 1; cont && i <= leaves.number_partition_tuples(); i++) {
             std::shared_ptr<LeafSet> part_left;
             std::shared_ptr<LeafSet> part_right;
             std::tie(part_left, part_right) = leaves.get_nth_partition_tuple(i);
@@ -54,20 +66,73 @@ protected:
             auto constraints_left = find_constraints(*part_left, constraints);
             auto constraints_right = find_constraints(*part_right, constraints);
 
-            ResultType subtrees_left;
-            ResultType subtrees_right;
-
-            subtrees_left = scan_terrace(*part_left,
-                                                       constraints_left);
-            subtrees_right = scan_terrace(*part_right,
-                                                        constraints_right);
+            auto subtrees_left = scan_terrace_internal(*part_left, constraints_left);
+            auto subtrees_right = scan_terrace_internal(*part_right, constraints_right);
 
             auto trees = combine_part_results(subtrees_left, subtrees_right);
-#pragma omp critical
             combine_bipartition_results(aggregation, trees);
         }
         
         return finalize_collect_type(aggregation, unrooted);
+    }
+
+    inline
+    virtual ResultType traverse_partitions_parallel(
+            const std::vector<constraint> &constraints,
+            LeafSet &leaves,
+            bool unrooted = false) {
+        CollectType result = initialize_collect_type();
+        std::vector<CollectType> aggregations;
+        #pragma omp parallel
+        {
+            #pragma omp single
+            {
+                // initialize the shared array (once)
+                size_t amount_threads = omp_get_num_threads();
+                aggregations = std::vector<CollectType>(amount_threads);
+            }
+            size_t thread_number = omp_get_thread_num();
+            // initialize the aggregation (per thread)
+            aggregations[thread_number] = initialize_collect_type();
+            
+            bool done = false; // variable indicating whether to continue or not
+            size_t amount_loops = leaves.number_partition_tuples();
+            
+            #pragma omp for
+            for (size_t i = 1; i <= amount_loops; i++) {
+                if(done) {
+                    continue;
+                }
+                std::shared_ptr<LeafSet> part_left;
+                std::shared_ptr<LeafSet> part_right;
+                std::tie(part_left, part_right) = leaves.get_nth_partition_tuple(i);
+
+                auto constraints_left = find_constraints(*part_left,
+                                                         constraints);
+                auto constraints_right = find_constraints(*part_right,
+                                                          constraints);
+
+                ResultType subtrees_left =
+                        scan_terrace_internal(*part_left, constraints_left);
+                ResultType subtrees_right =
+                        scan_terrace_internal(*part_right, constraints_right);
+
+                const auto trees = combine_part_results(subtrees_left,
+                                                  subtrees_right);
+                // TODO remove pragma critical and use aggregations vector.
+                #pragma omp critical
+                done = !combine_bipartition_results(result /* aggregations[thread_number] */, trees);
+                
+            }
+            
+            #pragma omp master
+            {
+                for (const auto &aggregation : aggregations) {
+                    combine_multiple_results(result, aggregation);
+                }
+            }
+        }
+        return finalize_collect_type(result, unrooted);
     }
 
     virtual CollectType initialize_collect_type() = 0;
@@ -82,6 +147,9 @@ protected:
 
     virtual bool combine_bipartition_results(CollectType &aggregation,
                                              const ResultType &new_result) = 0;
+
+    virtual bool combine_multiple_results(CollectType &aggregation_1,
+                                          const CollectType &aggregation_2) = 0;
 };
 
 typedef std::vector<InnerNodePtr> InnerNodeList;
@@ -140,6 +208,14 @@ protected:
         aggregation.push_back(std::static_pointer_cast<InnerNode>(new_result));
         return true;
     }
+
+    inline
+    bool combine_multiple_results(InnerNodeList &aggregation_1,
+                                  const InnerNodeList &aggregation_2) {
+        aggregation_1.insert(aggregation_1.end(), aggregation_2.begin(),
+                             aggregation_2.end());
+        return true;
+    }
 };
 
 typedef std::vector<Tree> TreeList;
@@ -193,6 +269,15 @@ protected:
                            new_result.end());
         return true;
     }
+
+    inline
+    bool combine_multiple_results(TreeList &aggregation_1,
+                                  const TreeList &aggregation_2) {
+        aggregation_1.insert(aggregation_1.end(), aggregation_2.begin(),
+                             aggregation_2.end());
+        return true;
+    }
+
 public:
     /**
      * Returns all possible binary trees that can be combined by using the
@@ -242,6 +327,13 @@ protected:
         aggregation += new_result;
         return true;
     }
+
+    inline
+    bool combine_multiple_results(mpz_class &aggregation_1,
+                                  const mpz_class &aggregation_2) {
+        aggregation_1 += aggregation_2;
+        return true;
+    }
 };
 
 class CheckIfTerrace : public TerraceAlgorithm<bool> {
@@ -254,6 +346,17 @@ protected:
             return true;
         }
         return TerraceAlgorithm<bool>::traverse_partitions(constraints, leaves);
+    }
+
+    inline
+    bool traverse_partitions_parallel(
+            const std::vector<constraint> &constraints, LeafSet &leaves,
+            bool) override {
+        if(leaves.number_partition_tuples() > 1) {
+            return true;
+        }
+        return TerraceAlgorithm<bool>::traverse_partitions_parallel(constraints,
+                                                                    leaves);
     }
 
     inline
@@ -282,5 +385,12 @@ protected:
                                      const bool &new_result) override {
         aggregation |= new_result;
         return aggregation;
+    }
+
+    inline
+    bool combine_multiple_results(bool &aggregation_1,
+                                  const bool &aggregation_2) {
+        aggregation_1 |= aggregation_2;
+        return aggregation_1;
     }
 };

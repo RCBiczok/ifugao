@@ -42,7 +42,7 @@ public:
         }
     }
     virtual leaf_number pop_normal() = 0;
-    virtual void merge(const LSClass &other) = 0;
+    //virtual void merge(const LSClass &other) = 0;
     virtual bool compressing_worth() const {
         return false;
     }
@@ -55,7 +55,7 @@ public:
             }
         }
         assert(new_mapping.size() == this->size());
-        this->resize_and_fill(size());
+        this->resize_and_fill(new_mapping, size());
         if(this->compressed) {
             // LeafSet was already compressed; update mapping
             for (size_t i = 0; i < new_mapping.size(); i++) {
@@ -70,7 +70,7 @@ public:
 private:
     std::vector<leaf_number> mapping;
     bool compressed;
-    virtual void resize_and_fill(size_t capacity) {
+    virtual void resize_and_fill(std::vector<leaf_number> &mapping, size_t capacity) {
         // should never be called
         assert(false);
         return;
@@ -300,7 +300,7 @@ private:
         boost::dynamic_bitset<>::operator|=(other);
     }
     inline
-    void resize_and_fill(size_t capacity) {
+    void resize_and_fill(std::vector<leaf_number> &mapping, size_t capacity) {
         this->resize(capacity, 1);
         this->set();
     }
@@ -311,7 +311,7 @@ private:
 };
 
 
-class UnionFindLeafSet  {
+class UnionFindLeafSet : public AbstractLeafSet<UnionFindLeafSet> {
     typedef std::vector<std::shared_ptr<UnionFindLeafSet>> partition_list;
     static const size_t invalid_entry = std::numeric_limits<size_t>::max();
 public:
@@ -540,6 +540,11 @@ public:
         return ret;
     }
 
+    bool compressing_worth() const {
+        //return false;
+        return this->size() < (float)capacity() / 32.0;
+    }
+
 
 private:
     std::shared_ptr<UnionFind> data_structure;
@@ -547,9 +552,23 @@ private:
     bool repr_valid = false; //true iff the representative is valid
     std::vector<leaf_number> list_of_partitions;  //contains the id's of the representatives of the sets
 
+    size_t capacity() const {
+        return data_structure->size();
+    }
 
-//    void merge(const UnionFindLeafSet &other) {
-//        assert(repr_valid && other.repr_valid);
-//        repr = data_structure->merge(repr, other.repr);
-//    }
+    void resize_and_fill(std::vector<leaf_number> &mapping, size_t capacity) {
+        //std::cout << "compressed\n";    //debug
+        data_structure = std::make_shared<UnionFind>(capacity);
+
+        //set the representative to the correct value.
+        //TODO this can be done more efficient when we implement our own compress function
+        for (size_t i = 0; i < mapping.size(); i++) {
+            if (mapping[i] == repr) {
+                std::cout << "old repr: " << repr << ", new repr: " << i << std::endl;
+                repr = i;
+                break;
+            }
+        }
+        return;
+    }
 };

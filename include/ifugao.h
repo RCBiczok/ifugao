@@ -6,7 +6,7 @@
 #include <gmpxx.h>
 #include <omp.h>
 
-#define PARALLEL_THRESHOLD 50
+#define PARALLEL_THRESHOLD 20
 
 /**
  * Returns a vector containing all constraints that still are valid for the given set of leaves.
@@ -17,7 +17,6 @@
  */
 std::vector<constraint> find_constraints(const LeafSet &leaves,
                                          const std::vector<constraint> &constraints);
-
 
 template <typename ResultType>
 class TerraceAlgorithm {
@@ -50,7 +49,8 @@ protected:
     virtual ResultType scan_unconstraint_leaves(LeafSet &leaves,
                                                 bool unrooted = false) = 0;
 
-    ResultType scan_terrace_internal(LeafSet &leaves,
+    inline
+    virtual ResultType scan_terrace_internal(LeafSet &leaves,
                                      const std::vector<constraint> &constraints) {
         if (constraints.empty()) {
             return scan_unconstraint_leaves(leaves);
@@ -81,47 +81,10 @@ protected:
     }*/
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 template <typename ResultType, typename CollectType = ResultType>
 class TerraceTreeAlgorithm : public TerraceAlgorithm<ResultType> {
 protected:
-    inline
+    inline virtual
     ResultType traverse_partitions(const std::vector<constraint> &constraints,
                                    LeafSet &leaves,
                                    bool unrooted = false) {
@@ -152,7 +115,7 @@ protected:
         return finalize_collect_type(found_trees, unrooted);
     }
 
-    inline
+    inline virtual
     ResultType traverse_partitions_parallel(
             const std::vector<constraint> &constraints,
             LeafSet &leaves,
@@ -222,7 +185,6 @@ protected:
 typedef std::vector<InnerNodePtr> InnerNodeList;
 class FindCompressedTree : public TerraceTreeAlgorithm<Tree, InnerNodeList> {
 protected:
-
     inline
     Tree scan_unconstraint_leaves(LeafSet &leaves,
                                   bool unrooted = false) override {

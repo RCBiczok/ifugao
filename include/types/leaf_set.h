@@ -63,6 +63,7 @@ public:
                 new_mapping[i] = this->mapping[new_mapping[i]];
             }
         }
+        compressed = true;
         this->mapping = new_mapping;
         return this->mapping;
     }

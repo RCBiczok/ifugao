@@ -8,14 +8,15 @@
 #include "debug.h"
 
 //Black Magic
-class BitLeafSet;
-typedef BitLeafSet LeafSet;
+//class BitLeafSet;
+//typedef BitLeafSet LeafSet;
 
-//class UnionFindLeafSet;
-//typedef UnionFindLeafSet LeafSet;
+class UnionFindLeafSet;
+typedef UnionFindLeafSet LeafSet;
 
 /**
  * Checks whenever the n-th bit is set in the given number
+ *
  * @param num the number to check
  * @param n the n-th bit to check whenever it is set or not
  * @return true of the n-th bit is set
@@ -23,6 +24,7 @@ typedef BitLeafSet LeafSet;
 inline bool is_bit_set(size_t num, size_t n) {
     return 1 == ((num >> n) & 1);
 }
+
 
 template <class LSClass>
 class AbstractLeafSet {
@@ -46,7 +48,7 @@ public:
     virtual bool compressing_worth() const {
         return false;
     }
-    std::vector<leaf_number> compress() {
+    virtual std::vector<leaf_number> compress() {
         assert(compressing_worth());
         std::vector<leaf_number> new_mapping;
         for (size_t i = 0; i < this->capacity(); i++) {
@@ -67,9 +69,11 @@ public:
         this->mapping = new_mapping;
         return this->mapping;
     }
-private:
-    std::vector<leaf_number> mapping;
+
+protected:
     bool compressed;
+    std::vector<leaf_number> mapping;
+private:
     virtual void resize_and_fill(std::vector<leaf_number> &mapping, size_t capacity) {
         // should never be called
         assert(false);
@@ -269,7 +273,8 @@ public:
     }
     inline
     bool compressing_worth() const {
-        return (64 * this->size()) < this->capacity();
+        return false;
+        //return (64 * this->size()) < this->capacity();
     }
 private:
     partition_list list_of_partitions;
@@ -319,6 +324,7 @@ public:
         data_structure = obj.data_structure;
         repr = obj.repr;
         repr_valid = obj.repr_valid;
+        assert(repr != invalid_entry);
 
         //list_of_partitions = obj.list_of_partitions; I dont think we need to copy this
     }
@@ -329,6 +335,11 @@ public:
     }
 
     UnionFindLeafSet(std::shared_ptr<UnionFind> data_structure) : data_structure(data_structure) {}
+
+    UnionFindLeafSet(std::shared_ptr<UnionFind> data_structure, std::vector<leaf_number> mapping)
+        : data_structure(data_structure) {
+        this->mapping = mapping;
+    }
 
     UnionFindLeafSet(size_t num_elems) {
         data_structure = std::make_shared<UnionFind>(num_elems);
@@ -349,10 +360,12 @@ public:
             data_structure->get_parent().at(i) = repr;
         }
         repr_valid = true;
+        assert(repr != invalid_entry);
     }
 
     bool contains(size_t leaf) const {
         assert(repr_valid);
+        assert(repr != invalid_entry);
         assert(leaf != invalid_entry);
 
         return data_structure->find(leaf) == repr;
@@ -445,6 +458,7 @@ public:
     }
 
     void apply_constraints(const std::vector<constraint> &constraints) {
+
         assert(list_of_partitions.size() == 0);
         assert(repr != invalid_entry);
 
@@ -465,7 +479,9 @@ public:
         for (constraint cons : constraints) {
             assert(cons.smaller_left < data_structure->size() && cons.smaller_right < data_structure->size());
             assert(cons.smaller_left != invalid_entry && cons.smaller_right != invalid_entry);
+
             repr = data_structure->merge(cons.smaller_left, cons.smaller_right);
+            assert(repr != invalid_entry);
         }
 
         //TODO how slow are std::sets? we could use a bool array as well
@@ -495,8 +511,8 @@ public:
         std::shared_ptr<UnionFind> uf_1 = std::make_shared<UnionFind>(data_structure->get_parent(), data_structure->get_rank());
         std::shared_ptr<UnionFind> uf_2 = std::make_shared<UnionFind>(data_structure->get_parent(), data_structure->get_rank());
 
-        std::shared_ptr<UnionFindLeafSet> part_one = std::make_shared<UnionFindLeafSet>(uf_1);
-        std::shared_ptr<UnionFindLeafSet> part_two = std::make_shared<UnionFindLeafSet>(uf_2);
+        std::shared_ptr<UnionFindLeafSet> part_one = std::make_shared<UnionFindLeafSet>(uf_1, this->mapping);
+        std::shared_ptr<UnionFindLeafSet> part_two = std::make_shared<UnionFindLeafSet>(uf_2, this->mapping);
 
         bool part_one_first_set = false;
         bool part_two_first_set = false;
@@ -541,6 +557,7 @@ public:
     }
 
     bool compressing_worth() const {
+        assert(repr != invalid_entry);
         //return false;
         return this->size() < (float)capacity() / 32.0;
     }
@@ -557,18 +574,25 @@ private:
     }
 
     void resize_and_fill(std::vector<leaf_number> &mapping, size_t capacity) {
+        assert(capacity == mapping.size());
         //std::cout << "compressed\n";    //debug
         data_structure = std::make_shared<UnionFind>(capacity);
 
         //set the representative to the correct value.
         //TODO this can be done more efficient when we implement our own compress function
         for (size_t i = 0; i < mapping.size(); i++) {
+            assert(mapping.at(i) != invalid_entry);
             if (mapping[i] == repr) {
-                std::cout << "old repr: " << repr << ", new repr: " << i << std::endl;
                 repr = i;
+                assert(repr != invalid_entry);
                 break;
             }
         }
+
+        for (size_t i = 0; i < data_structure->size(); i++) {
+            data_structure->get_parent().at(i) = repr;
+        }
+
         return;
     }
 };

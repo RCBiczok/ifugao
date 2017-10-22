@@ -101,6 +101,7 @@ input_data *parse_input_data(const char *data_file) {
 
             if (feof(f) != 0) {
                 // end of line reached, but there is more to read (num_species is too big)
+                fclose(f);
                 return NULL;
             }
 
@@ -118,6 +119,7 @@ input_data *parse_input_data(const char *data_file) {
     auto readStr = fgets(input_buffer, 256, f);
     if (feof(f) == 0 && readStr != NULL) {
         // end of line is not reached yet, but there are no more species to read (num_species is too small)
+        fclose(f);
         return NULL;
     }
 
